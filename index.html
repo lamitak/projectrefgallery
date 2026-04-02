@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Reference Gallery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    #root { min-height: 100vh; }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAEbCAIAAAB7qkWAAAAmlUlEQVR4nO3dd3wT5R8H8OdGLkmzmhYoFBBkg4LKEBEBt8gS3Iggqyj82KDs4WbvvUE2lFmGIioICC5ApqJsBErbJG1Gm+Tufn887Vm7KEgpT/p5v/wDw5G7XHOfPs/3nuc5TlVVAgDAAr6wDwAAIL8QWADADAQWADADgQUAzEBgAQAzEFgAwAwEFgAwA4EFAMxAYAEAMxBYAMAMBBYAMAOBBQDMQGABADMQWADADAQWADADgQUAzEBgAQAzEFgAwAwEFgAwA4EFAMxAYAEAMxBYAMAMBBYAMAOBBQDMQGABADMQWADADAQWADADgQUAzEBgAQAzEFgAwAwEFgAwA4EFAMxAYAEAMxBYAMAMBBYAMAOBBQDMQGABADMQWADADAQWADADgQUAzEBgAQAzEFgAwAwEFgAwA4EFAMxAYAEAMxBYAMAMBBYAMAOBBQDMQGABADMQWADADAQWADADgQUAzEBgAQAzEFgAwAwEFgAwA4EFAMxAYAEAMxBYAMAMBBYAMAOBBQDMQGABADMQWADADAQWADADgQUAzEBgAQAzEFj3BFVVVUUp7KMAuNchsAqfLMscx3E8fhYAN4GLpDApikIIEQThxo34UydPEUJUVS3sgwK4dyGwCoeiKLIs8zyvquqG9bHPNnlq547tJCPCACBHYmEfQJGjqqqiKIIgEEJ+PHRo4vgJ+/ftc6ekGI1hhX1oAPc6BNZdJcuyIAiCIFy8eHHGtGnr1qxJTU0Lt9uDgQDaVgA3hcC6SxRF4ThOEASv17t4wcJ5c+devXrVZrNZrXpFlpFWAPmBwCpwmfuA2+PiJk+cdPTIUZPZZI+IkINB2uYq7GMEYAMCqwBpUSUIwpHDRyZPnLDrq12CINgj7IqiyMFgYR8gAGMQWAVFK1ddv3595vTpq1asdKekWKxW+leFfXQATEJg3Xna6Ko0f9rypctmz5p98cIFq9VqtdkKLqpyrILxRWkwqqqq2UexcRzHcZz2vzhLrENg3UmZy1Xf7N49afyEn3780RgWZrfbZVku0IYVrros2ZQjnCXWIbDuGK0PeOrkySmTJ2/bGkcICbfb6RjRAt11IBA4dfKkLCv0guU4LhgMhoeHV6xUSVXVm17GrKOf8fr165cuXtTpdFo7S1GUSpUqWW02uoGqqn/88YfH7eYFgagqIURRVKPRULVaNQQZKxBYd4CiKDzPC4LgdDpnz5y5dMkSZ5LDarORgi9X0UsxKTGp3ZttU1JSBEFQVZUeyYvNXly2YoWqKFyo34WUZVkUxQ3rY4cOGlS8RIlgMEgI4Xne6/V+sXLFM88+SzdQFOX9fv1/+uknk8lEf2Q+n69q1arbv/rSYDAUhWQPAQis/0RRFKKqvCDIsrxm1eoZ06b9eeaM2Wq1hYff5co6n0FVVfqHonb5cRynnQSScUKynITsG6BtxRYE1m3KXK7av2/fpAkT9u/br9frIyIjC7pcBbnhMpD8lbSAOQis26GVq87+dXb61CkbYjcEAgGbzaaqahCjqwpJflpYwDoE1q3RZti43e75c+ctnD//Rny81WbT6/Uh1qpKHyVAC9iZWi7/BR1VQIviXO7vqe2aFs/pRjddL8yf5nc5nXq9XqthebzeO/v7Qzv+f5pwCMS7C4GVX5n7gJs2bJg6ZeqJ48fNZnO43S7LcsisY0U/Jm2bZLka6eVK2y9ZBj3lMdyJ/hVdSyd7wYguXqi9rp3kHIMgy8Ya+kNp2uzFUtGlDAa9QgORkKAs16pVi9xsNIOiKIqi0KJ7jhmUfk4EIe/jz3JO8thpfoaMQY4QWDeXeYbNzz/9PGnChG+/+UYURftdGbJwN2m3Owkh169fj79+3e12E0IsFkvJUqWKFStGMtqYeV9dWa5VeuOSEHLx4sXr16573G5JL9nt9jJly1osFm2/2t6DweC5s2cTExK9Pp/RaDCbzZGRkdGlS9M30Q5Ae3/658pVKleuUjnH48njUDmOCwvLa2GfzOfk8qVLCQkJXq9XEESr1VqmbJnMx5//xMmjaYnMyhsC6ya0ctXfV65MnzZtzarVPp/ParWqqhpKUUUyrrpgMLhl0+aNG2JPnTp9Iz7e7/cTQvR6fVRUVK2HH+rQsWOjRo0IIfv37Rvz2ecmk4kQkpKSMnzEiAYNHw8Gg6Io/n3lSq//9aQnzel0duzc6Y0331y3dt26tWtOnTyZlJikKopKSJjJVDo6+tHHHusaE1OtejV6nq9evbp82Re7v9517uy55ORkjhCVEEmSIiMjy5Yt26Bhw5dffaVKlSrk39c2/bcbYmNnz5hpj4igPxeO49LSUkd9+GHdetW0pnGWz6vT6f7+++9X27wsCDzPCy6Xc8iwYY0aN6anQjsnLqdz7Zq1O7dv/+uvvxITE+WgTIgaZjKVio6u/1j9LjEx1atXJ4SsXL58xfIVVqs1GAzqdLqx48eXva+s9laZT/LVv68O7N/f7/fzPKeqhOe5tDR/yVIlx02YQBMQcoPAypVWrvL5fEsXL547e86VK1esVqvVag2xqCIZ1/zp06eHfPDBgf0HeJ7X6/WSJOn1ekKIqqrXr1/funnL9rhtnbp0+ejTTzZt2Lj7668jIiIIIUlJSe++9x7JKE55vd69330n6nQcx/m83mAgsPe779auXiPqdEajkWYcIURRlPPnz58+fXpjbOzojz9q36HDhvWxH3/40ZUrl+mOtUtXVVWHw3H9+vUffvhh0YIF73Tq9P6gDyRJ0jKL7vfK5St79+wpERX1Tw3L43E4HCT3hafpUKz9+/YRVRV1uhs3bnSJidG2p+Hyze7do4aP+P3333WiKOn1BqORyzj+C+fP/3769MbYjUOGD+0aE7Nyxcrv9+6lgSVJksfjybI7laT3BEeNGLF1yxaLxaL1slNSUuYvXEBfwUiLPCCwcpC5XPXlzp2TJkw8/Ouvprsyw6ZQ0A/746FDnd7pmJSQGG63E1Wl15I2RECv1+v1ekVR5syadeXy5XNnz5YoUcJgMND6lE6n096N53mLzSYKAiHEYrH8eebPEydO2CMiCMepipK5vKXX68PCwnypvo9GjT5+7Nj6NWv9gUBERAStKGXeUhRFnU7H8bwcCE4cP/78ubPTZ82SJIlk6u5JkmSz2SwWixZYoiiK4k2+4TzPWywWwhFREP1+v/ZBaIKvWbV6YP/+hBDtqLiMPQqCYDQaw8LC0tLSRo8YefTIkYsXL5YoUUIQBEVRJEnKnjuKrAiCsGrFis0bN0VHR9MPKIqiI8nxXo8eb7Rti7S6KQTWv2QuVx377bfJEyd9uWMHx/OhV67S0IGmFy5c6Nala7LLZQu3pV/wgpCWmpqWmqqoKsdxekkyGI2EkMjIyK++/FKSJJ1OFwwGBUHIfs9B0WYJESLqRJ2k05oSHMdl7nAFg0FJJ6mqumzJUpPJZDQa6d7pkH36s6B/UFWVKArHc1FRUevXra9QsdKQYUNpK1j7ILIsK5kyMZ83Q+j2Cqdo28uyLEnS3j173+/fX5IkURS1EPT5fH6/n540g8FA/1YUxdh1641GI/10yr9zWduLIAjnzp375KOPTWYT3RfP8263u2LlSkOHDQ2Z+zYFCoH1D628mpiQOHPG9OXLvkhOTraG+oIw9Dr5cOTIq1ev2iMigoEAoZ2U5OT77rvvicaNy5QpnZCQcGD/gdOnTpnNZlmWTSZTjve5cnt/uiW9OFVVNRqNHo+HI8RkNmt/a7FYaDDRAHK5XIIgSJLkdrtFUQwLC9OGFAQCgcjIyCWLFr3x5hsVKlb874u1Zh+3JYpiSkrKyOHDFVUVRVEriqWkpNR4oEaDxx+PjIy8dOnS93u/v3LpktliURTFbDbncSTpfUxVGTp4cFJSklZVoM+j/PSzz+icUzSvbgqBlU5VFZ7nA4HAii++mD1z1rlz5ywWi60gF4S5F9CL5MD+/bu+2mWz2bS0crvdLVq2/Hzs2GLFi9Mt3W73pAkT586eTSfi3eqOOI7zuN3PPPNMuw7tS0VH34iPX7Vi5c4dO8LCwrSCEd1SVVW/39+23VuvvPqqxWI5e/bskkWLf/rxx8yJIIpiYmJi3Na43n37/MfAUlXV6/XS9/R4PFpLav26dSeOH4+MjMxcEftfr579Bw7U7ireiI8fMmjw9rg4c0Y1Kje0eTV39mxa+KPvST9Frz69mzz1JBaezScEFiHpt5z4Pd/tmTh+/KGDB40Goz3Crsih2QfMLnb9+rS0tDBTGFHS5ww/9PDDM2bN1BsMdJyRqqpms3nk6FEJN+LXrllrtdmUWzkzgiAkJye3f6fDuAkTtBeffe650SNHzZ0925Lpauc4zuv1jhw9+t3u79FXHnr44eYtWnTr3OWrr77SMktVVVEUf/35F/rmt/dj4jjO7/eXKVNm9Mcf0XJYIBCoWbMmIURRlI2xsXpJSu/JCnyyK/nV114dPnIkyRh7papq8RIlZs6Z/Urrq0cOH9HagNnRtDp+/PiEceMtFgs9Wlpor127dv+BA9G2yj+cpvQ+y4ihw9587bVff/4lPDxcJ+nkYOiMBc0NraF4vd4fD/1oNBpVJf3zyrLcs1cvvcFAS1S0m0xrLv0GDLDZbLe0uDPHcWmpqeXKl6dXezAYpKUrQsjQ4cOqVquWmppKO2L0YB5v2PDd7u/RiqGiKIFAQJKk0R9/bLPZgsEg3ZKOSLh46UIgELjtgUu03mQymZ57/vkmTz7Z5Mknn33uuaiSJQkhf54588fvf+jpEg6EyEHZYrb07tePlsm0cxIMBvV6fa8+fdSbdQbT0tKGDBrk9XpFUaQ3N2lh/tMxY8xmM8lzpBhkVtQDS1spae/ePTpRNFvNoTRsPW/0Y168cOHq33/rdDpaP0pLSytTtuzjTzTURntS9M/3V6jwSO3aPp8v/y0CWqh+5JFHaOFGFEV6/44Wth977DGfz0ffnON5v9/fuEkT+iuE5gJd36r8/eWrVquWlpamXdg8z7tcyYFAgOQ+aiE/FEXxer2KnI4m6e+nf3c4HOnhwvO+1NSHH3m4SpUqHEeynBNVVRs8/njZcuUyH1uW9+d5ftqUKQcP/KA1rwRBSHa5evftW7deXToH4LaPv6jBmUpnMplUQhS5CD1uKyOwLmoXG8dxgUCgXLlydrudZPu1T7s81apX8/v9t3qN0Zp69gMwhhm11zlCVFUNM4XlODnGbDZneQdVUW6pZ5obnuf5jEYT3fWlixe1bibP8/60tGo1qhNC5H9/PejGVqu1XLlyubX1dDrdoYMHZ0yfER4ert0AdblcDRs1+l+vnugM3iqcrHRF9smASUlJgUCAXja0qxIdHU1yarbQV4oXL0HbpLe6o+zXc47vk+M7394ebwM9yBsJCVpLSlVVnuOioqJyPDb6SslSJTMPsND+khDicrmGDh4iZ3Rm6a8Em832+ZgxWcaRQX4gsIowVSWEBIKBzNehqqo6SZf7vyEGgyHkGwVpaamZ/5fjeToGLTd6SZ89y+ivwMkTJh49fDjzoHaPx9O7b99qNaqjM3gbcL6KOp7jszYM8mzL+AN+JdRrfDmsyhDMq+8ZCARyaiZxhJB6j9YLM5m0VW7S72/++gt9pYhUS+8gBFYRxnGEELPZLIgivXLofUOnw0ly76okJiSoOXR/QgQ9DzZb+D9RwnFyMOh0OnPcnp6H+BvxnCBkSR+aes1btuzctYvT6aSThOh9yU2xG5YsWkQn8RTghwlFCKyirlR0KXqLkP6vIAi05Jw9kmhZ588zf2Z+Mk1Iii4d/U8oq6ogihcunCc5LZvDcZzP57t04aJOEHM8J7Isvz9o0COPPOJ2u7Vls6w227gxY0+dPInMulUIrFCm5olekBUqVqQD+mlhW6/XX7hw4c8zZ7JMP1YVRVXV+Pj4w7/+ajAYQvsyq1ixoslspjcKFUUxGAxHDx/xejxZav90huPRI0cuXLigN+RQxiKEqKpqMpk+GztG+62gqqpOp3O73UMGDf7vwzKKGgRWyKIz4wRR5HJBH7ETGRn54IMP0tGbtMLidDg3xMbSZRjSs01RgrLM8/wXS5deu3aNLu1S2J+vQNBG0IM1a0aXLu33++k5MRgMZ8+e/XLnl/QeX8YpSV/NYtHChWlpabmVz3mel2W5br16vfv2cblctGMoy7LVaj2wb9/0qdPoyoV38zMyDVNzQpCiKEaj8fix4107d1b+WTfhHzwvuN3ulq1atW33FsdxTZu9uGvXLnrlKIpisVqWLlr8/Asv1KlbN/0fcJyO57/e9fXsmbPynuXLOo7jFFk2m81PPvXUgnnz6OoRtE00cfz4ho2eKFGihLYlIWT+3HnbtsblvUQazawevXrt3bP30MGDdPioLMtWm2361KmNmzSmSwzijmF+ILBCEL3AEhIS6NOnsxMEISkpqWKlinTgVavWrWfPmnX50mXa1xMEwZeaGtO5y+ChQ5559lmdJDkdjg2xsbNmzKRD1UO1eZWO4wgh7d9pv2b1KjoZiPYKz58/3+7NtoOHDKldt47A81euXPli2bIvli4zGo15Jzhtz+ol6dMxn7dp2SoQCNAh8rzAp6amDh00eOPWLUajUcX6yPmAwApNtHNHl3Im2cvnPC/LMl1NNBgM2my29wcNerdrjLaik16vT0pK6tu7d/HiJcwWc1JiksPhMIWZaI/mrg3jLBS0pVm9eo2uMTETxo4rERUVCAQURQkLCzt96lTH9h2iSkZJkhQfH+92u+kI/swLn+b2nrIs16hR4/1Bg4YOHkwXbFBkxWw2Hzl8eMK4caM+/BALNuQHWqEhS9UWtJPlrP8p/yxWRyc2t3n55e49ety4cYMuC0VnF5vNluTk5MuXLvv9fpvNxgs8vfDyKNmEBpra/QcObNqsWXx8PF3umXa0DUZDQkLClStXCCE2m40QIghCIBDQJmbnhp7VTl06v9C0qdPppNkUDAZt4eEL5s3f8913giAUqZlhtyeUv3ZFCn/rMk8kVhRl1Ecf9uzd2+l00rnNdGKdJEkGg0HMqNynpKTIsjx2/PhaD9Xy+Xx0JjOf+xPhs+8rCy7T009vect/h2b2DbKnaj53l96J0+vnzJ/XslWrhBs3An6/IAj0H+v1eoPBoE08dCQlRUZGTpk+LSIiQnuaWY67JoQIgvDJZ58WL17cT98w43hGDBvmcrl4AQX4m0BghQJVVX3eWxbw++k/124afvTJx/MXLaxatarH40lMSExOTna73e4Ut8vlSkxI9Pl8tWvXXrZiedt2bzVq3DglJcXnS99t5ueV0iXxsvBn7CsLv9/v9Xj+dVSBQI5bpqWlZXnPVJ8v8waBQMDrybKJN8v1n8ObpKaSnNBur8ViWbx06edjx0aVLJmcnJyUmJiSfk5SnE5nYmJiIBhs2qzZijWrX2rd+pHatZMSk9JS03eRvYfI87wsy+XKlx8xepTH46F793g8HMcdOXxk2OAhRWT9tf8ilIsR+UELELIsN2/a9MTxEzctoBYEQRAcSUmjP/64R8//3Wohgx5/amrq3j17goGb9Eo0HMf5A/5KlSrXeKBG5lov/bPf7//u2+9+PHTw3LnzyS4Xz3O28PCKFSo+1qBBoyaNeF6QZdnpdB7Yt58+ssEf8D/66KMlS5Wit7o8bs+e777T3pPjuEDAX658+VoPPZR9XydPnPjzzBlJr1cVleM5f5q/Zq1a91e4P/uWhw4euhEfL4qCqhLCEVVRJUn35NNPi6JI9/vXX38dP3ZMr9fThb04jgRl+dH69UuUKKEtInRg/wGHI0kUBFrZk2XFYrE0bPREbudcOwyXy/XN17t//vnny5cveT0eUdRFREZUqVK1UeNGtevUIRkP0Tn22zFJLymKIvBCwyeeMFvM2Uvp9JVvv/nG6/EKAp/xeGuiKsqTTz+d90MSAYHFdmDdcTc9gKJ2A17N9Ail3DagU5ru5lEVWbhLGCJuozfB5fLYd21UpFbiyfwKnzG/JHOyZykGZT+YHPdFMgaLZ34lt7pS9i0J+ddyelkOKcd3y/4mHCF8ngHNcVyO54SOWctcCFMVVVH/OQCBF0ju7d0cf164S3hTCKwQcQe/6/QSvdVXbu9g8t8wuemWeR/Sre7upm+evbLO8ZxA8vvBkU23B+1YAGAGAgsAmIHAAgBmILDuFZhHBnBTCKzCR2u3uQ2YBAAN7hIWJnqz3+12K4pSIqpEYR8OwL0OLazCQZfW8/v9Tqez1kO1Vq9f/+prr6n/fnYpAGSBFlYhoE85dzmd5e6/v3uPHu3f6UBXSc+8SglKWgDZIbDuKlqucrlcVqu1R6+e3Xv0iCpZUhszTbehUUXn/SO2ADJDYN0ltFzl8XiIqjZv0bz/wIEPPPggISQQCOh0uoDff/XGjdKlSxNCkpOTfT4ffdRwoU8tBLinoIZV4OisjkAg4HQ4atasuWDJ4oVLljzw4IN0xRWdTnfo4MFmLzRdv3Yt3f76tWutW7ScN2dOWloafQwU1kgCoBBYBYvOm3U4HMWKFft0zJjN2+KavvgiXT1KkqS//vyzb6/ebV9/44cDP0iSnv4TnU6XkJg4bMjQNq1e2vXVV3TOmrZAKEBRhsAqKDRoXC4XIaTbe+9t3bG9a7cYnU5Hn+OQkpIyafyEl1q0XLVypSRJFotZyyNVVXU6MTw8/NjRox3bd+jaqfPxY8fo6pSILSjiUMO687RylaqoLzZr1n/ggJq1ahFCAn6/TpJ4nl+/du30qdNOnTplNpvDw8Pp4uuZ34G+EmYyqaoat3Xr93v2tOvQvkfPnsWKFSNFb0UqAA2+93cUxwmCEAwEHA5HjQcemL944eJlS2vWqkVHsesk6YcDP7zx6ms9e/zv3LlzdrudPgAitzej1SubzRaU5RlTpzV/oenSxUv8fj+f8QDBu/jBAO4JCKw7RhAEoqoOh8MeGfnJZ59ujtvarHlzWq7S6XQXzp8f0Ldf29df/37vXpvNZjAY8tm/o+MbIiIjr1279sHAga+0bvPt7m9Q2IKiCV3CO4B20JKTk8PCwrp2i+nVu3ep6GiVqFq5asG8+YsWLLh+/brNZtPr9be6OqiqqsFgkD7A5tdffunw9tstWrbs079ftWrVCEZsQVGCwPpPtHKVoijPPf983/796CMJaLlKEIRNGzZOnTz5xIkTZpPZbrfTZ5Tf3r5oYctkMhFCNsTGfvvtN+907Phe9x72CDtBYQuKBnzFb58gCsFg0OFwVK9efd7CBctWLK9dpw59dpZOkg4dPNj29Te6d+v2119/2SMiBDGvclX+0epVeHh4IM0/eeKkFi++uHrlStrIQmELQh4C63bQ0eeOJEd4ePjojz7ctHVLi5Ytg8Ggqqo6Sbp06dL7Awa8+drre7791kLLVcHgnS02ybLMC4Ldbr98+XKfXr1fbfPy93v3orAFIQ9dwlujlauMRmPnrl169+0bHR1Na0y0XLVk4aIF8+dfu3rVYrVarNaCezQm7SHSpxAfOniw3ZttW7/cpm///hUqVCCY0wMhCoGVX7RcRZ9y/PTTT/cbOKBuvXokYzKgKIqbN22aNmXKsd+OmUym8P9Urso/2gc0m82qqq5ZtXr3rq87de7c9d1udHgXnpcHIQbf5nyhC8I4kpKqVKkyb8H8FWtW161XT5sM+MvPP7/d9q3uMd3++P0Pu90uiuJdfuY4fdxeeHi4z+cbN3Zsq+bN169dRxM2x8f5ATAKgXUTdE6Mw+GwWqzDR43csn1by5deonkkSdLly5cHvf/Bay+/svvrr81Wq9FoLMQSEu0G2iMizp8737NHj9dfefWH/QfoiAcUtiA0oEuYK57nuYxyVcdOnXr26X3fffdp5Sqv17t08ZK5c+b8feWK1Wq1FmS5Kv9UVZWDQYPBYDQa933//Y+HDr386it9+/W7r1w5gsIWsA+BlQO6IIzH4wkGg02eemrAgAH16j9KMpWrtm7ZMnXylN+OHjWZTP9xdFVBoIUti8Uiy/KKZV98/dWurjExnbp2sVgsKGwB0/DFzUoQhKAcTEpKqlSp0sw5s1etWVOv/qNauerokSMd2r39bteY30+dskcUQrkq/+iBhdvtKSkpn3z88UvNW2zasBGFLWAaWlj/oOUqp8MRVbJkn759unaLMZvNdEymJElXLl+ZOX36mtWrvR6PxWolhMjBezSqMqPTg+x2+5kzZ3q89966tWv7DRhQt15dgjk9wCAEVjqeF5KTk23htnYd2vfq3fv+ChUIIbRclZaWtmTx4rmz51y+dMlqtVpttnu2VZUjOmLLaDRyHPfN7t0/7D/w2ptv9OrTu0yZMgSFLWAKAiud2+1u1KjxsJHDH61fnxDi9/slSRJFcVtc3LTJUw4fPhwWFma325V7rFyVf7SwRW8OLF648KudO9/t3v2djh2NYUYUtoAVRf07qj2i5pPPPt24dfOj9evTtaskSfrt6NGOHTrEdO5y8sQJu91OFwtlvfBD09ZutzudzpHDhrVq0SJu61YUtoAVRT2wKEmSGjdpQpsYOp3u6tWrI4YNe/ml1ju37zCbzcawsBAbx5Re2IqIOH3yZLcuXd9p3/63336j9axQ+pgQetAlTEcr0G63e92atbNnzrxw4YLVarWxVq7Kv/TCVlgYIeTLHTv3f7/vrbfffq9Hdzo1EpV4uDehhZWOrnMwYtiw7t26Xbt2rXjx4nSAeGEfV8GiK9LY7Xae5yeOG9eqWfPTp09zHIdlauDehMD6B8/zw0aMmDB5st1uT7hxg2SszRDCtCGyKSkprdu0mT5rZoUKFVCAh3sWvpfpaOG5ePHivfr0jtuxvV379n6/3+12C4IQqlcvfQSGIympfPnyU2fMWL56VYPHH5ckCf1BuGeF5qV422hl575y5SZNnbJi9aoGjzdwOp30CcyhdBnzAs9xnNPpNBqNHwwZErdzx+tvvI6eINz7EFj/QrtItLLzRKNG6zZsmDpjeukyZRxJSYqihMAAS47nBUHwpLhTU1Nfe/31TXFbB37wvjZzO1TbkhAy8AXNAV1rmD7W4c22beO2b+vTv79Op3M5nfSvCvsAbwfHcaIo+tPSnE5nvfr1V6xePWP2rMqVK9MRGyGQxVAUMHnt3R08z9MeYkRk5LARwzdt3fJSmzZer9fr8TLXQ6TNxsTExJKlSk2YNCl208bGTRrThiRznwWKMgRWXmgPkcZWterV5y6Yv3jp0loP1XI4HIFAQBAEcs9f6rRJ6HK5RFHo069v3I7t7d/pQMvt7LYWocjCwNGb0wpbhJDnXni+UZPGy5d9MXvmzEuXLlmt1rwfN1+ItGcmqoS0aNmy/8ABNR54gGTMdkYfEFiEX7D5pRW2DAZD124x23bu6Nqtm6IoycnJ99zQB44TRCEQCDiczpq1ai1asnjB4kU1HngA5Spg3b10mbFAK2yVLFXqszGfr9sQ+8xzzyYnJ/t8vnukGCQIAlFVR5IjMjLyk88+3Ry39YWmTVVVRbkKQgAC65ZlLmzVqVt3+cqVc+bPq1S5ssPhCAaDhdh+oW3A5ORkVVG7xsRs2b6t27vvSpIkyzLtHhbWgQHcKfgS3yatsKWq6kutW2+J2zp0+DCT2ex0OjmO4+9ubNGD8fl8KW73M88+u37Txs/GjildujT6gBBiEFj/ifYQLYvV2rd//7gd29u+9Zbf73enpNy1/pf2zMTKVSrPnjtn+aqVj9R+RIsq9AEhlCCw7gCth1i+fPkp06ctX7XqsQYNXE6n3+8v0MjQnplosViGjxoZt3176zZtUK6CEIbAujMyz+lp1LhR7KaNk6dNLV26tMPhKIg5PTzPC4KQkpLi9/vbtX9787a43n37hplMKFdBaMM3+07Shj5wHNe2Xbst27f17ttHFEWX03WnRmnSZExNTXW5XA0bNlwbu37y1Kn3338/ylVQFCCw7jwaTLIsFytWbPjIkZvjtrZq3crj8Xi9/3VODx2kmpSUVLZs2SnTp63dEFv/sccwwwaKDgRWQck8p2fewoWLli6pWbOm0+EI3NbQB1rddzqder3+/UEfxO3c8WbbthzHKZhhA0UJvugFKHNh64WmTTfFbf10zOcREREOh4PQEZ75fhOPx5OamvryK69sjtv6weDBdrs9fUEY9AGhKEFgFTjaApJlWa/Xd+3WLW77ti4xXfMzp4fLmGHjdDrr1KmzbPny2fPmVqlaFeUqKLIQWHeJ1kOMLl3687Fj12/c8PQzz+Qxp4c2zRxJjhJRUWPGjduwZfNTzzyNchUUcQisu0eb06MoSu06dVasXjVrzuyKlSo6HA662Iu2Gc/zLlcyz/P/69lz67Ztnbp0FkURC8IA4Nt/t2V+zHKbV17Zsm3b4KFDjcYwr9dLNwjKstfjfbH5ixs2bxr10YdRJaNkWSboAwIQgif9Fia6NBUh5OSJE8nJyY81aEAIuXb16tGjR19o2pRkPN4VHUAACoFVyLSZNNlfx/MBAbJAYN0T6HKmNJ5UVVUVBeMVALJDYAEAM9DjAABmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBmILAAgBkILABgBgILAJiBwAIAZiCwAIAZCCwAYAYCCwCYgcACAGYgsACAGQgsAGAGAgsAmIHAAgBm/B+1UUwRx1IysgAAAABJRU5ErkJggg==";
+
+/* ═══════════════════════════════════════════════════════════
+   DATA MODEL
+   - SKUs: product identifiers with code, name, category
+   - Projects: folders of images, each tagged with 1+ SKUs
+   - Public: browse/search SKUs → see images from tagged projects
+   - Admin: separate page to manage SKUs, projects, categories
+   ═══════════════════════════════════════════════════════════ */
+const INIT_CATEGORIES = ["Wood", "Metal", "Stone", "Glass", "Ceramic"];
+
+const INIT_SKUS = [
+  { id: "s1", code: "WD-OAK-2400", name: "White Oak 2400mm Panel", category: "Wood" },
+  { id: "s2", code: "ST-BLK-1200", name: "Black Steel Frame 1200mm", category: "Metal" },
+  { id: "s3", code: "MRB-CAR-600", name: "Carrara Marble Tile 600x600", category: "Stone" },
+  { id: "s4", code: "LM-WAL-1800", name: "Walnut Laminate 1800mm", category: "Wood" },
+  { id: "s5", code: "GL-FRS-800", name: "Frosted Glass Panel 800mm", category: "Glass" },
+  { id: "s6", code: "CER-WHT-300", name: "White Ceramic Tile 300x300", category: "Ceramic" },
+  { id: "s7", code: "WD-TEK-1200", name: "Teak Plank 1200mm", category: "Wood" },
+  { id: "s8", code: "ST-COP-900", name: "Copper Finish Trim 900mm", category: "Metal" },
+  { id: "s9", code: "MRB-NER-600", name: "Nero Marquina Tile 600x600", category: "Stone" },
+  { id: "s10", code: "GL-CLR-1000", name: "Clear Tempered Glass 1000mm", category: "Glass" },
+  { id: "s11", code: "CER-GRY-450", name: "Grey Porcelain Tile 450x450", category: "Ceramic" },
+  { id: "s12", code: "WD-ASH-2000", name: "Ash Veneer 2000mm", category: "Wood" },
+];
+
+const INIT_PROJECTS = [
+  { id: "p1", name: "Marina Bay Residence", date: "2025-08", skuIds: ["s1", "s3", "s6"], designer: "Atelier Tan", photographer: "Kevin Lim Photography", description: "Full interior renovation of a waterfront apartment featuring natural materials and warm tones.", internalOnly: false, images: [
+    { id: "i1", url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop", caption: "Living room feature wall" },
+    { id: "i2", url: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=600&h=400&fit=crop", caption: "Kitchen counter detail" },
+    { id: "i3", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop", caption: "Master bath floor" },
+  ]},
+  { id: "p2", name: "Orchard Tower Lobby", date: "2025-06", skuIds: ["s2", "s5", "s8"], designer: "Studio Flux", photographer: "Darren Soh", description: "Commercial lobby redesign blending industrial steel elements with frosted glass screens.", internalOnly: false, images: [
+    { id: "i4", url: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&h=400&fit=crop", caption: "Reception desk frame" },
+    { id: "i5", url: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=600&h=400&fit=crop", caption: "Glass partition" },
+  ]},
+  { id: "p3", name: "Sentosa Cove Villa", date: "2025-03", skuIds: ["s1", "s9", "s10"], designer: "WOHA Interiors", photographer: "", description: "Resort-style villa with open-plan living and dark marble accents.", internalOnly: true, images: [
+    { id: "i6", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop", caption: "Exterior deck" },
+    { id: "i7", url: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop", caption: "Pool house interior" },
+    { id: "i8", url: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=600&h=400&fit=crop", caption: "Guest bath vanity" },
+  ]},
+  { id: "p4", name: "CBD Office Fitout", date: "2025-07", skuIds: ["s2", "s4", "s11"], designer: "Space Matrix", photographer: "Marc Tey Studio", description: "Modern office fitout for a fintech startup with walnut and steel palette.", internalOnly: false, images: [
+    { id: "i9", url: "https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=600&h=400&fit=crop", caption: "Open plan workspace" },
+    { id: "i10", url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop", caption: "Meeting room" },
+  ]},
+  { id: "p5", name: "Holland Village Penthouse", date: "2025-05", skuIds: ["s3", "s7", "s12"], designer: "Ong & Ong", photographer: "Edward Hendricks", description: "Luxury penthouse with marble flooring and teak deck extension.", internalOnly: false, images: [
+    { id: "i11", url: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=600&h=400&fit=crop", caption: "Entryway flooring" },
+    { id: "i12", url: "https://images.unsplash.com/photo-1600573472591-ee6981cf81d2?w=600&h=400&fit=crop", caption: "Bedroom accent wall" },
+    { id: "i13", url: "https://images.unsplash.com/photo-1600585153490-76fb20a32601?w=600&h=400&fit=crop", caption: "Balcony decking" },
+  ]},
+  { id: "p6", name: "Tanjong Pagar Gallery", date: "2025-04", skuIds: ["s5", "s8", "s9"], designer: "FARM Architects", photographer: "", description: "Art gallery renovation with copper trim detailing and dark stone walls.", internalOnly: true, images: [
+    { id: "i14", url: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=600&h=400&fit=crop", caption: "Exhibition space divider" },
+    { id: "i15", url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop", caption: "Gallery entrance" },
+  ]},
+];
+
+/* ─── Icons (compact) ─── */
+const I = ({ n, size = 18 }) => {
+  const s = { width: size, height: size, strokeWidth: 1.5, fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" };
+  const d = {
+    search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>,
+    folder: <><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></>,
+    image: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></>,
+    plus: <><path d="M5 12h14"/><path d="M12 5v14"/></>,
+    trash: <><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></>,
+    edit: <><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></>,
+    x: <><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>,
+    back: <><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>,
+    grid: <><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></>,
+    upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
+    shield: <><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></>,
+    check: <><polyline points="20 6 9 17 4 12"/></>,
+    tag: <><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></>,
+    layers: <><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></>,
+    eye: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>,
+    hash: <><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></>,
+    chevL: <><path d="m15 18-6-6 6-6"/></>,
+    chevR: <><path d="m9 18 6-6-6-6"/></>,
+    file: <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/></>,
+    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
+    alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+    swap: <><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></>,
+    user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></>,
+    lock: <><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+    ban: <><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></>,
+    text: <><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></>,
+    settings: <><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>,
+    mail: <><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
+    logOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+    key: <><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.3 9.3"/><path d="m18.2 4.8 3 3"/></>,
+  };
+  return d[n] ? <svg {...s} viewBox="0 0 24 24">{d[n]}</svg> : null;
+};
+
+/* ─── Shared Styles ─── */
+const mono = "'IBM Plex Mono', monospace";
+const sans = "'DM Sans', sans-serif";
+const btnBase = { border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: sans, fontWeight: 600, borderRadius: 8, transition: "all 0.15s" };
+const inputBase = { width: "100%", boxSizing: "border-box", fontFamily: sans, fontSize: 13, padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", outline: "none" };
+const pill = (active) => ({ padding: "5px 12px", borderRadius: 20, border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accentSoft)" : "transparent", color: active ? "var(--accent)" : "var(--textMuted)", fontFamily: sans, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" });
+
+/* ─── Multi-Select SKU Picker ─── */
+const SKUPicker = ({ allSkus, selected, onChange }) => {
+  const [q, setQ] = useState("");
+  const filtered = allSkus.filter(s => !q || s.code.toLowerCase().includes(q.toLowerCase()) || s.name.toLowerCase().includes(q.toLowerCase()));
+  const toggle = (id) => onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]);
+  return (
+    <div>
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="Filter SKUs…" style={{ ...inputBase, marginBottom: 8, fontSize: 12 }} />
+      <div style={{ maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2, border: "1px solid var(--border)", borderRadius: 8, padding: 4 }}>
+        {filtered.length === 0 && <div style={{ padding: 12, textAlign: "center", color: "var(--textMuted)", fontFamily: sans, fontSize: 12 }}>No SKUs match</div>}
+        {filtered.map(s => (
+          <div key={s.id} onClick={() => toggle(s.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 6, cursor: "pointer", background: selected.includes(s.id) ? "var(--accentSoft)" : "transparent", transition: "all 0.1s" }}>
+            <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected.includes(s.id) ? "var(--accent)" : "var(--border)"}`, background: selected.includes(s.id) ? "var(--accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s", color: "#fff" }}>
+              {selected.includes(s.id) && <I n="check" size={12} />}
+            </div>
+            <span style={{ fontFamily: mono, fontSize: 11, color: "var(--accent)", fontWeight: 600, flexShrink: 0 }}>{s.code}</span>
+            <span style={{ fontFamily: sans, fontSize: 12, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+          </div>
+        ))}
+      </div>
+      {selected.length > 0 && <div style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", marginTop: 6 }}>{selected.length} SKU{selected.length !== 1 ? "s" : ""} selected</div>}
+    </div>
+  );
+};
+
+/* ─── Lightbox ─── */
+const Lightbox = ({ image, onClose, subtitle }) => {
+  if (!image) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, cursor: "zoom-out" }}>
+      <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "50%", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><I n="x" size={22} /></button>
+      <div onClick={e => e.stopPropagation()} style={{ maxWidth: "90vw", maxHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", cursor: "default" }}>
+        <img src={image.url} alt={image.caption || ""} style={{ maxWidth: "100%", maxHeight: "75vh", objectFit: "contain", borderRadius: 4 }} />
+        <div style={{ marginTop: 14, textAlign: "center", color: "#fff" }}>
+          {image.caption && <div style={{ fontFamily: sans, fontSize: 14, fontWeight: 600 }}>{image.caption}</div>}
+          {subtitle && <div style={{ fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>{subtitle}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   PUBLIC PAGE – Browse & Search SKUs
+   ═══════════════════════════════════════════════════════════ */
+const PublicPage = ({ skus, projects, categories }) => {
+  const [search, setSearch] = useState("");
+  const [filterCat, setFilterCat] = useState("All");
+  const [activeSku, setActiveSku] = useState(null);
+  const [lightbox, setLightbox] = useState(null);
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    const h = e => { if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); searchRef.current?.focus(); } };
+    window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
+  }, []);
+
+  const allCats = ["All", ...categories];
+  const filtered = useMemo(() => skus.filter(s => {
+    const q = search.toLowerCase();
+    const matchQ = !q || s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q);
+    const matchC = filterCat === "All" || s.category === filterCat;
+    return matchQ && matchC;
+  }), [skus, search, filterCat]);
+
+  const getImagesForSku = useCallback((skuId) => {
+    const imgs = [];
+    projects.forEach(p => { if (p.skuIds.includes(skuId)) p.images.forEach(img => imgs.push({ ...img, projectName: p.name, projectDate: p.date, projectDesigner: p.designer, projectPhotographer: p.photographer, projectDescription: p.description, projectInternal: p.internalOnly, projectId: p.id })); });
+    return imgs;
+  }, [projects]);
+
+  const getProjectsForSku = useCallback((skuId) => {
+    return projects.filter(p => p.skuIds.includes(skuId));
+  }, [projects]);
+
+  const imageCount = useCallback((skuId) => {
+    let c = 0; projects.forEach(p => { if (p.skuIds.includes(skuId)) c += p.images.length; }); return c;
+  }, [projects]);
+
+  const previewImages = useCallback((skuId) => {
+    const imgs = [];
+    for (const p of projects) { if (p.skuIds.includes(skuId)) for (const img of p.images) { imgs.push(img); if (imgs.length >= 4) return imgs; } }
+    return imgs;
+  }, [projects]);
+
+  const downloadImage = (url, name) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name || "image.jpg";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const internalBadge = (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: mono, fontSize: 10, fontWeight: 700, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "3px 8px", borderRadius: 4, whiteSpace: "nowrap" }}>
+      <I n="ban" size={11} /> Do not distribute externally
+    </span>
+  );
+
+  /* ─── SKU Detail View — Grouped by Project ─── */
+  if (activeSku) {
+    const relatedProjects = getProjectsForSku(activeSku.id);
+    const totalImages = relatedProjects.reduce((a, p) => a + p.images.length, 0);
+    return (
+      <div>
+        <Lightbox image={lightbox} onClose={() => setLightbox(null)} subtitle={lightbox ? `${activeSku.code} · ${lightbox.projectName}` : ""} />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28, flexWrap: "wrap" }}>
+          <button onClick={() => { setActiveSku(null); setLightbox(null); }} style={{ ...btnBase, background: "var(--muted)", border: "1px solid var(--border)", color: "var(--text)", width: 40, height: 40, flexShrink: 0 }}><I n="back" size={18} /></button>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontFamily: mono, fontSize: 14, color: "var(--accent)", fontWeight: 700, letterSpacing: "0.04em" }}>{activeSku.code}</div>
+            <h2 style={{ fontFamily: sans, fontSize: 22, fontWeight: 700, color: "var(--text)", margin: "4px 0 0" }}>{activeSku.name}</h2>
+            <div style={{ fontFamily: mono, fontSize: 12, color: "var(--textMuted)", marginTop: 4 }}>{activeSku.category} · {totalImages} photo{totalImages !== 1 ? "s" : ""} across {relatedProjects.length} project{relatedProjects.length !== 1 ? "s" : ""}</div>
+          </div>
+        </div>
+
+        {relatedProjects.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            {relatedProjects.map(proj => (
+              <div key={proj.id}>
+                {/* Project Header Card */}
+                <div style={{ padding: "16px 18px", background: "var(--card)", borderRadius: "12px 12px 0 0", border: "1px solid var(--border)", borderBottom: "none", position: "relative" }}>
+                  {proj.internalOnly && (
+                    <div style={{ marginBottom: 10 }}>{internalBadge}</div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <h3 style={{ fontFamily: sans, fontSize: 17, fontWeight: 700, color: "var(--text)", margin: 0 }}>{proj.name}</h3>
+                      {proj.description && <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: "6px 0 0", lineHeight: 1.45 }}>{proj.description}</p>}
+                      <div style={{ display: "flex", gap: 16, marginTop: 10, flexWrap: "wrap" }}>
+                        {proj.designer && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: sans, fontSize: 12, color: "var(--textMuted)" }}>
+                            <I n="user" size={13} /> {proj.designer}
+                          </div>
+                        )}
+                        {proj.photographer && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: sans, fontSize: 12, color: "var(--textMuted)" }}>
+                            <I n="camera" size={13} /> {proj.photographer}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: mono, fontSize: 11, color: "var(--textMuted)" }}>
+                          {proj.date} · {proj.images.length} image{proj.images.length !== 1 ? "s" : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => { proj.images.forEach((img, i) => setTimeout(() => downloadImage(img.url, `${proj.name.replace(/\s+/g, "_")}_${i + 1}.jpg`), i * 300)); }}
+                      style={{ ...btnBase, padding: "7px 14px", fontSize: 12, background: "var(--muted)", color: "var(--text)", border: "1px solid var(--border)", flexShrink: 0 }}>
+                      <I n="download" size={14} /> All Photos
+                    </button>
+                  </div>
+                </div>
+                {/* Image Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 0, border: "1px solid var(--border)", borderRadius: "0 0 12px 12px", overflow: "hidden", background: "var(--card)" }}>
+                  {proj.images.map((img, idx) => (
+                    <div key={img.id} style={{ position: "relative", borderRight: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+                      <div onClick={() => setLightbox({ ...img, projectName: proj.name, projectDate: proj.date })} style={{ cursor: "zoom-in", aspectRatio: "3/2", overflow: "hidden" }}>
+                        <img src={img.url} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }} onMouseEnter={e => e.target.style.transform = "scale(1.05)"} onMouseLeave={e => e.target.style.transform = ""} />
+                      </div>
+                      {proj.internalOnly && (
+                        <div style={{ position: "absolute", top: 6, left: 6, background: "rgba(220,38,38,0.88)", color: "#fff", fontFamily: mono, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, display: "flex", alignItems: "center", gap: 3 }}>
+                          <I n="ban" size={9} /> INTERNAL ONLY
+                        </div>
+                      )}
+                      <div style={{ padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontFamily: sans, fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{img.caption || "Untitled"}</div>
+                          {proj.photographer && <div style={{ fontFamily: mono, fontSize: 10, color: "var(--textMuted)", marginTop: 1 }}>Photo: {proj.photographer}</div>}
+                        </div>
+                        <button onClick={e => { e.stopPropagation(); downloadImage(img.url, `${proj.name.replace(/\s+/g, "_")}_${img.caption?.replace(/\s+/g, "_") || idx + 1}.jpg`); }}
+                          style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 3, borderRadius: 4, flexShrink: 0 }}
+                          onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"} onMouseLeave={e => e.currentTarget.style.color = "var(--textMuted)"} title="Download image">
+                          <I n="download" size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--textMuted)" }}><I n="image" size={40} /><p style={{ fontFamily: sans, fontSize: 14, marginTop: 12 }}>No project images tagged with this SKU yet.</p></div>
+        )}
+      </div>
+    );
+  }
+
+  /* ─── SKU Grid ─── */
+  return (
+    <div>
+      <div style={{ position: "relative", maxWidth: 500, marginBottom: 24 }}>
+        <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--textMuted)" }}><I n="search" size={16} /></div>
+        <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SKU code or product name…" style={{ ...inputBase, paddingLeft: 36 }} onFocus={e => e.target.style.borderColor = "var(--accent)"} onBlur={e => e.target.style.borderColor = "var(--border)"} />
+        <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontFamily: mono, fontSize: 10, color: "var(--textMuted)", background: "var(--muted)", padding: "2px 6px", borderRadius: 4 }}>⌘K</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{allCats.map(c => <button key={c} onClick={() => setFilterCat(c)} style={pill(filterCat === c)}>{c}</button>)}</div>
+        <span style={{ fontFamily: mono, fontSize: 12, color: "var(--textMuted)" }}>{filtered.length} SKU{filtered.length !== 1 ? "s" : ""}</span>
+      </div>
+      {search && (
+        <div style={{ marginBottom: 16, padding: "8px 14px", borderRadius: 8, background: "var(--accentSoft)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontFamily: sans, fontSize: 13, color: "var(--accent)" }}>Results for "<strong>{search}</strong>"</span>
+          <button onClick={() => setSearch("")} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontFamily: sans, fontSize: 12, fontWeight: 600, textDecoration: "underline" }}>Clear</button>
+        </div>
+      )}
+      {filtered.length > 0 ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 18 }}>
+          {filtered.map(sku => {
+            const previews = previewImages(sku.id);
+            const count = imageCount(sku.id);
+            return (
+              <div key={sku.id} onClick={() => setActiveSku(sku)} style={{ background: "var(--card)", borderRadius: 12, overflow: "hidden", cursor: "pointer", border: "1px solid var(--border)", transition: "all 0.25s ease" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,0,0,0.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+                <div style={{ display: "grid", gridTemplateColumns: previews.length >= 2 ? "1fr 1fr" : "1fr", gap: 2, aspectRatio: "4/3", background: "var(--muted)" }}>
+                  {previews.length > 0 ? previews.slice(0, 4).map((img, i) => (
+                    <div key={img.id} style={{ overflow: "hidden", gridRow: i === 0 && previews.length >= 2 ? "1 / 3" : undefined }}>
+                      <img src={img.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  )) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--textMuted)", gridColumn: "1/-1" }}><I n="image" size={32} /></div>
+                  )}
+                </div>
+                <div style={{ padding: "12px 14px" }}>
+                  <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.03em" }}>{sku.code}</div>
+                  <div style={{ fontFamily: sans, fontSize: 13, color: "var(--text)", marginTop: 3, lineHeight: 1.3 }}>{sku.name}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                    <span style={{ fontFamily: mono, fontSize: 10, color: "var(--textMuted)", background: "var(--muted)", padding: "2px 8px", borderRadius: 4 }}>{sku.category}</span>
+                    <span style={{ fontFamily: mono, fontSize: 10, color: "var(--textMuted)" }}>{count} photo{count !== 1 ? "s" : ""}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--textMuted)" }}><I n="folder" size={40} /><p style={{ fontFamily: sans, fontSize: 14, marginTop: 12 }}>No SKUs match your search.</p></div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN – SKU List Tab (built for ~700 items)
+   ═══════════════════════════════════════════════════════════ */
+const AdminSKUs = ({ skus, categories, onAdd, onUpdate, onDelete, projects }) => {
+  const [search, setSearch] = useState("");
+  const [filterCat, setFilterCat] = useState("All");
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({ code: "", name: "", category: "" });
+  const [sortCol, setSortCol] = useState("code");
+  const [sortDir, setSortDir] = useState(1);
+  const [page, setPage] = useState(0);
+  const PER_PAGE = 25;
+  const allCats = ["All", ...categories];
+
+  const filtered = useMemo(() => {
+    let list = skus.filter(s => {
+      const q = search.toLowerCase();
+      return (!q || s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) && (filterCat === "All" || s.category === filterCat);
+    });
+    list.sort((a, b) => { const va = (a[sortCol] || "").toLowerCase(), vb = (b[sortCol] || "").toLowerCase(); return va < vb ? -sortDir : va > vb ? sortDir : 0; });
+    return list;
+  }, [skus, search, filterCat, sortCol, sortDir]);
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paged = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  useEffect(() => setPage(0), [search, filterCat]);
+
+  const projCount = (skuId) => projects.filter(p => p.skuIds.includes(skuId)).length;
+  const startEdit = (s) => { setEditId(s.id); setForm({ code: s.code, name: s.name, category: s.category }); setShowForm(true); };
+  const startAdd = () => { setEditId(null); setForm({ code: "", name: "", category: categories[0] || "" }); setShowForm(true); };
+  const save = () => {
+    if (!form.code.trim() || !form.name.trim()) return;
+    if (editId) onUpdate({ ...skus.find(s => s.id === editId), code: form.code.trim().toUpperCase(), name: form.name.trim(), category: form.category });
+    else onAdd({ id: `s${Date.now()}`, code: form.code.trim().toUpperCase(), name: form.name.trim(), category: form.category });
+    setShowForm(false); setEditId(null);
+  };
+
+  const colHead = (label, col, flex) => (
+    <div onClick={() => { if (sortCol === col) setSortDir(-sortDir); else { setSortCol(col); setSortDir(1); } }}
+      style={{ flex, fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--textMuted)", textTransform: "uppercase", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 3 }}>
+      {label}{sortCol === col && <span style={{ fontSize: 8 }}>{sortDir === 1 ? "▲" : "▼"}</span>}
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 340 }}>
+          <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--textMuted)" }}><I n="search" size={14} /></div>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SKUs…" style={{ ...inputBase, paddingLeft: 32, fontSize: 12 }} />
+        </div>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{allCats.map(c => <button key={c} onClick={() => setFilterCat(c)} style={pill(filterCat === c)}>{c}</button>)}</div>
+        <button onClick={startAdd} style={{ ...btnBase, background: "var(--accent)", color: "#fff", padding: "8px 16px", fontSize: 13, marginLeft: "auto" }}><I n="plus" size={14} /> Add SKU</button>
+      </div>
+      <div style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", marginBottom: 12 }}>{filtered.length} SKU{filtered.length !== 1 ? "s" : ""}{filtered.length !== skus.length ? ` (of ${skus.length})` : ""}</div>
+
+      {/* Inline Form */}
+      {showForm && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, padding: 16, background: "var(--accentSoft)", borderRadius: 10, flexWrap: "wrap", alignItems: "flex-end", border: "1px solid var(--accent)33" }}>
+          <div style={{ flex: "1 1 140px" }}>
+            <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>SKU CODE</label>
+            <input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} style={{ ...inputBase, fontFamily: mono, fontSize: 12 }} placeholder="WD-OAK-2400" />
+          </div>
+          <div style={{ flex: "2 1 200px" }}>
+            <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>PRODUCT NAME</label>
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ ...inputBase, fontSize: 12 }} placeholder="White Oak 2400mm Panel" />
+          </div>
+          <div style={{ flex: "1 1 120px" }}>
+            <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>CATEGORY</label>
+            <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} style={{ ...inputBase, fontSize: 12, cursor: "pointer" }}>{categories.map(c => <option key={c}>{c}</option>)}</select>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={save} disabled={!form.code.trim() || !form.name.trim()} style={{ ...btnBase, background: form.code.trim() && form.name.trim() ? "var(--accent)" : "var(--muted)", color: form.code.trim() && form.name.trim() ? "#fff" : "var(--textMuted)", padding: "9px 16px", fontSize: 12 }}><I n="check" size={14} /> {editId ? "Save" : "Add"}</button>
+            <button onClick={() => { setShowForm(false); setEditId(null); }} style={{ ...btnBase, background: "var(--muted)", color: "var(--text)", padding: "9px 12px", fontSize: 12 }}><I n="x" size={14} /></button>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
+      <div style={{ borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden" }}>
+        <div style={{ display: "flex", gap: 8, padding: "10px 14px", background: "var(--muted)", borderBottom: "1px solid var(--border)" }}>
+          {colHead("SKU Code", "code", "2 1 0")}
+          {colHead("Product Name", "name", "3 1 0")}
+          {colHead("Category", "category", "1.2 1 0")}
+          <div style={{ flex: "0.8 1 0", fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--textMuted)", textTransform: "uppercase" }}>Projects</div>
+          <div style={{ flex: "0.8 1 0", fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--textMuted)", textTransform: "uppercase", textAlign: "right" }}>Actions</div>
+        </div>
+        {paged.length === 0 && <div style={{ padding: 32, textAlign: "center", color: "var(--textMuted)", fontFamily: sans, fontSize: 13 }}>No SKUs found.</div>}
+        {paged.map((s, i) => (
+          <div key={s.id} style={{ display: "flex", gap: 8, padding: "9px 14px", alignItems: "center", borderBottom: i < paged.length - 1 ? "1px solid var(--border)" : "none", background: editId === s.id ? "var(--accentSoft)" : "var(--card)" }}>
+            <div style={{ flex: "2 1 0", fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.code}</div>
+            <div style={{ flex: "3 1 0", fontFamily: sans, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+            <div style={{ flex: "1.2 1 0" }}><span style={{ fontFamily: mono, fontSize: 10, color: "var(--textMuted)", background: "var(--muted)", padding: "2px 8px", borderRadius: 4 }}>{s.category}</span></div>
+            <div style={{ flex: "0.8 1 0", fontFamily: mono, fontSize: 12, color: "var(--textMuted)" }}>{projCount(s.id)}</div>
+            <div style={{ flex: "0.8 1 0", display: "flex", justifyContent: "flex-end", gap: 2 }}>
+              <button onClick={() => startEdit(s)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4, borderRadius: 4 }} title="Edit"><I n="edit" size={14} /></button>
+              <button onClick={() => onDelete(s.id)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4, borderRadius: 4 }} title="Delete"><I n="trash" size={14} /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 16 }}>
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} style={{ ...btnBase, background: "var(--muted)", color: page === 0 ? "var(--textMuted)" : "var(--text)", padding: "6px 10px", fontSize: 12, opacity: page === 0 ? 0.5 : 1 }}><I n="chevL" size={14} /></button>
+          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--textMuted)" }}>Page {page + 1} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} style={{ ...btnBase, background: "var(--muted)", color: page >= totalPages - 1 ? "var(--textMuted)" : "var(--text)", padding: "6px 10px", fontSize: 12, opacity: page >= totalPages - 1 ? 0.5 : 1 }}><I n="chevR" size={14} /></button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN – Projects Tab
+   ═══════════════════════════════════════════════════════════ */
+const AdminProjects = ({ projects, skus, onAdd, onUpdate, onDelete, onDeleteImage }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({ name: "", date: "", skuIds: [], designer: "", photographer: "", description: "", internalOnly: false });
+  const [expandedId, setExpandedId] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  const uploadTargetRef = useRef(null);
+
+  const startAdd = () => { setEditId(null); setForm({ name: "", date: new Date().toISOString().slice(0, 7), skuIds: [], designer: "", photographer: "", description: "", internalOnly: false }); setShowForm(true); };
+  const startEdit = (p) => { setEditId(p.id); setForm({ name: p.name, date: p.date, skuIds: [...p.skuIds], designer: p.designer || "", photographer: p.photographer || "", description: p.description || "", internalOnly: !!p.internalOnly }); setShowForm(true); };
+  const save = () => {
+    if (!form.name.trim()) return;
+    const payload = { name: form.name.trim(), date: form.date, skuIds: form.skuIds, designer: form.designer.trim(), photographer: form.photographer.trim(), description: form.description.trim(), internalOnly: form.internalOnly };
+    if (editId) { const proj = projects.find(p => p.id === editId); onUpdate({ ...proj, ...payload }); }
+    else onAdd({ id: `p${Date.now()}`, ...payload, images: [] });
+    setShowForm(false); setEditId(null);
+  };
+  const handleImageUpload = (projId, files) => {
+    if (!files || files.length === 0) return;
+    const proj = projects.find(p => p.id === projId);
+    if (!proj) return;
+    setUploading(true);
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+    const fileArr = Array.from(files).filter(f => validTypes.includes(f.type));
+    if (fileArr.length === 0) { setUploading(false); return; }
+    let loaded = 0;
+    const newImages = [];
+    fileArr.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const caption = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        newImages.push({ id: `i${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, url: e.target.result, caption });
+        loaded++;
+        if (loaded === fileArr.length) {
+          onUpdate({ ...proj, images: [...proj.images, ...newImages] });
+          setUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  const triggerUpload = (projId) => { uploadTargetRef.current = projId; fileInputRef.current.value = ""; fileInputRef.current.click(); };
+  const skuLabel = (id) => { const s = skus.find(x => x.id === id); return s ? s.code : id; };
+
+  const internalBadge = <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontFamily: mono, fontSize: 9, fontWeight: 700, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "2px 8px", borderRadius: 4, whiteSpace: "nowrap" }}><I n="lock" size={10} /> INTERNAL ONLY</span>;
+
+  return (
+    <div>
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" multiple onChange={e => handleImageUpload(uploadTargetRef.current, e.target.files)} style={{ display: "none" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <span style={{ fontFamily: mono, fontSize: 12, color: "var(--textMuted)" }}>{projects.length} project{projects.length !== 1 ? "s" : ""}</span>
+        <button onClick={startAdd} style={{ ...btnBase, background: "var(--accent)", color: "#fff", padding: "8px 16px", fontSize: 13 }}><I n="plus" size={14} /> New Project</button>
+      </div>
+
+      {showForm && (
+        <div style={{ padding: 20, background: "var(--accentSoft)", borderRadius: 12, marginBottom: 16, border: "1px solid var(--accent)33" }}>
+          <h4 style={{ fontFamily: sans, fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 14px" }}>{editId ? "Edit Project" : "New Project Folder"}</h4>
+          {/* Row 1: Name + Date */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: "2 1 200px" }}>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>PROJECT NAME</label>
+              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={inputBase} placeholder="e.g. Marina Bay Residence" />
+            </div>
+            <div style={{ flex: "1 1 120px" }}>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>DATE</label>
+              <input value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputBase} placeholder="2025-08" />
+            </div>
+          </div>
+          {/* Row 2: Designer + Photographer */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 200px" }}>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>PROJECT DESIGNER</label>
+              <input value={form.designer} onChange={e => setForm(f => ({ ...f, designer: e.target.value }))} style={inputBase} placeholder="e.g. Studio Wabi" />
+            </div>
+            <div style={{ flex: "1 1 200px" }}>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>PHOTOGRAPHY CREDITS <span style={{ opacity: 0.5, fontWeight: 400 }}>(optional)</span></label>
+              <input value={form.photographer} onChange={e => setForm(f => ({ ...f, photographer: e.target.value }))} style={inputBase} placeholder="e.g. Kenneth Lim Photography" />
+            </div>
+          </div>
+          {/* Row 3: Description */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>DESCRIPTION</label>
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ ...inputBase, resize: "vertical", lineHeight: 1.5 }} placeholder="Brief description of the project…" />
+          </div>
+          {/* SKU Picker */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 4 }}>TAG WITH SKUS</label>
+            <SKUPicker allSkus={skus} selected={form.skuIds} onChange={ids => setForm(f => ({ ...f, skuIds: ids }))} />
+          </div>
+          {/* Internal Only Checkbox */}
+          <div style={{ marginBottom: 16 }}>
+            <label onClick={() => setForm(f => ({ ...f, internalOnly: !f.internalOnly }))} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "10px 14px", borderRadius: 8, border: `1px solid ${form.internalOnly ? "#dc2626" : "var(--border)"}`, background: form.internalOnly ? "#fef2f2" : "var(--bg)", transition: "all 0.15s" }}>
+              <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${form.internalOnly ? "#dc2626" : "var(--border)"}`, background: form.internalOnly ? "#dc2626" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s", color: "#fff" }}>
+                {form.internalOnly && <I n="check" size={13} />}
+              </div>
+              <div>
+                <div style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: form.internalOnly ? "#dc2626" : "var(--text)" }}>For internal sharing only</div>
+                <div style={{ fontFamily: sans, fontSize: 11, color: "var(--textMuted)", marginTop: 1 }}>Images will display a "Do not distribute externally" label</div>
+              </div>
+              {form.internalOnly && <div style={{ marginLeft: "auto" }}><I n="lock" size={16} /></div>}
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={save} disabled={!form.name.trim()} style={{ ...btnBase, background: form.name.trim() ? "var(--accent)" : "var(--muted)", color: form.name.trim() ? "#fff" : "var(--textMuted)", padding: "9px 18px", fontSize: 13 }}><I n="check" size={14} /> {editId ? "Save" : "Create"}</button>
+            <button onClick={() => { setShowForm(false); setEditId(null); }} style={{ ...btnBase, background: "var(--muted)", color: "var(--text)", padding: "9px 14px", fontSize: 13 }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {projects.map(p => {
+          const expanded = expandedId === p.id;
+          return (
+            <div key={p.id} style={{ border: `1px solid ${p.internalOnly ? "#fecaca" : "var(--border)"}`, borderRadius: 10, overflow: "hidden", background: "var(--card)" }}>
+              <div onClick={() => setExpandedId(expanded ? null : p.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", flexWrap: "wrap" }}>
+                <div style={{ transform: expanded ? "rotate(90deg)" : "", transition: "transform 0.15s", color: "var(--textMuted)", flexShrink: 0 }}><I n="chevR" size={14} /></div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{p.name}</span>
+                    {p.internalOnly && internalBadge}
+                  </div>
+                  <div style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", marginTop: 2 }}>{p.date} · {p.images.length} image{p.images.length !== 1 ? "s" : ""}{p.designer ? ` · ${p.designer}` : ""}</div>
+                </div>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: "0 1 auto" }}>
+                  {p.skuIds.slice(0, 4).map(sid => <span key={sid} style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accentSoft)", padding: "2px 8px", borderRadius: 4 }}>{skuLabel(sid)}</span>)}
+                  {p.skuIds.length > 4 && <span style={{ fontFamily: mono, fontSize: 10, color: "var(--textMuted)" }}>+{p.skuIds.length - 4}</span>}
+                </div>
+                <div style={{ display: "flex", gap: 2, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                  <button onClick={() => startEdit(p)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4 }}><I n="edit" size={14} /></button>
+                  <button onClick={() => onDelete(p.id)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4 }}><I n="trash" size={14} /></button>
+                </div>
+              </div>
+              {expanded && (
+                <div style={{ padding: "0 14px 14px", borderTop: "1px solid var(--border)" }}>
+                  {/* Project details */}
+                  <div style={{ padding: "12px 0 8px", display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, fontFamily: sans, color: "var(--textMuted)" }}>
+                    {p.designer && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><I n="user" size={13} /> {p.designer}</span>}
+                    {p.photographer && <span style={{ display: "flex", alignItems: "center", gap: 4 }}><I n="camera" size={13} /> {p.photographer}</span>}
+                  </div>
+                  {p.description && <p style={{ fontFamily: sans, fontSize: 12, color: "var(--textMuted)", margin: "0 0 12px", lineHeight: 1.5 }}>{p.description}</p>}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+                    {p.images.map(img => (
+                      <div key={img.id} style={{ position: "relative", borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}>
+                        <img src={img.url} alt={img.caption} style={{ width: "100%", aspectRatio: "3/2", objectFit: "cover", display: "block" }} />
+                        {p.internalOnly && (
+                          <div style={{ position: "absolute", bottom: 28, left: 0, right: 0, background: "rgba(220,38,38,0.88)", color: "#fff", fontFamily: mono, fontSize: 8, fontWeight: 700, textAlign: "center", padding: "3px 0", letterSpacing: "0.05em" }}>DO NOT DISTRIBUTE EXTERNALLY</div>
+                        )}
+                        <div style={{ padding: "6px 8px", fontFamily: sans, fontSize: 11, color: "var(--textMuted)" }}>{img.caption}</div>
+                        <button onClick={() => onDeleteImage(p.id, img.id)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(220,50,50,0.85)", border: "none", color: "#fff", borderRadius: 4, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><I n="trash" size={11} /></button>
+                      </div>
+                    ))}
+                    <div onClick={() => triggerUpload(p.id)} style={{ borderRadius: 8, border: "2px dashed var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 100, cursor: "pointer", color: "var(--textMuted)", gap: 4, transition: "all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--textMuted)"; }}>
+                      <I n="upload" size={18} /><span style={{ fontFamily: sans, fontSize: 11, fontWeight: 500 }}>{uploading ? "Uploading..." : "Upload"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN – Categories Tab
+   ═══════════════════════════════════════════════════════════ */
+const AdminCategories = ({ categories, onAdd, onRename, onDelete, skuCounts }) => {
+  const [newCat, setNewCat] = useState("");
+  const [editCat, setEditCat] = useState(null);
+  const [editVal, setEditVal] = useState("");
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const handleAdd = () => { const t = newCat.trim(); if (!t || categories.includes(t)) return; onAdd(t); setNewCat(""); };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <input value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="New category name…" onKeyDown={e => e.key === "Enter" && handleAdd()} style={{ ...inputBase, flex: 1 }} />
+        <button onClick={handleAdd} disabled={!newCat.trim() || categories.includes(newCat.trim())} style={{ ...btnBase, padding: "8px 16px", fontSize: 13, background: newCat.trim() && !categories.includes(newCat.trim()) ? "var(--accent)" : "var(--muted)", color: newCat.trim() && !categories.includes(newCat.trim()) ? "#fff" : "var(--textMuted)" }}><I n="plus" size={14} /> Add</button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {categories.map(cat => {
+          const count = skuCounts[cat] || 0;
+          if (confirmDel === cat) return (
+            <div key={cat} style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid #ef4444", background: "#fef2f2" }}>
+              <div style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: "#dc2626", marginBottom: 6 }}>Delete "{cat}"?</div>
+              <p style={{ fontFamily: sans, fontSize: 12, color: "#7f1d1d", margin: "0 0 10px", lineHeight: 1.4 }}>{count > 0 ? `${count} SKU${count !== 1 ? "s" : ""} will become "Uncategorized".` : "No SKUs are using this category."}</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => setConfirmDel(null)} style={{ ...btnBase, background: "var(--card)", border: "1px solid var(--border)", color: "var(--text)", padding: "6px 14px", fontSize: 12 }}>Cancel</button>
+                <button onClick={() => { onDelete(cat); setConfirmDel(null); }} style={{ ...btnBase, background: "#dc2626", color: "#fff", padding: "6px 14px", fontSize: 12 }}>Delete</button>
+              </div>
+            </div>
+          );
+          if (editCat === cat) return (
+            <div key={cat} style={{ display: "flex", gap: 8, padding: "8px 14px", borderRadius: 10, border: "1px solid var(--accent)", background: "var(--accentSoft)", alignItems: "center" }}>
+              <input value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus onKeyDown={e => {
+                if (e.key === "Enter") { const t = editVal.trim(); if (t && (t === cat || !categories.includes(t))) { if (t !== cat) onRename(cat, t); setEditCat(null); } }
+                if (e.key === "Escape") setEditCat(null);
+              }} style={{ ...inputBase, flex: 1, fontWeight: 600, borderColor: "var(--accent)" }} />
+              <button onClick={() => { const t = editVal.trim(); if (t && (t === cat || !categories.includes(t))) { if (t !== cat) onRename(cat, t); setEditCat(null); } }} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", padding: 4 }}><I n="check" size={18} /></button>
+              <button onClick={() => setEditCat(null)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4 }}><I n="x" size={18} /></button>
+            </div>
+          );
+          return (
+            <div key={cat} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{cat}</span>
+                <span style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", background: "var(--muted)", padding: "2px 8px", borderRadius: 4 }}>{count} SKU{count !== 1 ? "s" : ""}</span>
+              </div>
+              <div style={{ display: "flex", gap: 2 }}>
+                <button onClick={() => { setEditCat(cat); setEditVal(cat); setConfirmDel(null); }} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4 }}><I n="edit" size={15} /></button>
+                <button onClick={() => setConfirmDel(cat)} style={{ background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 4 }}><I n="trash" size={15} /></button>
+              </div>
+            </div>
+          );
+        })}
+        {categories.length === 0 && <div style={{ textAlign: "center", padding: 32, color: "var(--textMuted)" }}><I n="tag" size={28} /><p style={{ fontFamily: sans, fontSize: 13, marginTop: 8 }}>No categories yet.</p></div>}
+      </div>
+      <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 8, background: "var(--muted)", fontFamily: sans, fontSize: 11, color: "var(--textMuted)", lineHeight: 1.4 }}>
+        Renaming a category updates all SKUs using it. Deleting a category reassigns affected SKUs to "Uncategorized".
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN – Excel Import Tab
+   ═══════════════════════════════════════════════════════════ */
+const ExcelImporter = ({ skus, categories, onBulkAddSkus, onBulkAddProjects, onBulkAddCategories }) => {
+  const [mode, setMode] = useState("skus"); // "skus" | "projects"
+  const [step, setStep] = useState("upload"); // "upload" | "map" | "preview"
+  const [fileName, setFileName] = useState("");
+  const [rawHeaders, setRawHeaders] = useState([]);
+  const [rawRows, setRawRows] = useState([]);
+  const [sheetNames, setSheetNames] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
+  const [workbook, setWorkbook] = useState(null);
+  const [mapping, setMapping] = useState({});
+  const [previewData, setPreviewData] = useState([]);
+  const [importResult, setImportResult] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [errors, setErrors] = useState([]);
+  const fileRef = useRef(null);
+
+  const skuFields = [
+    { key: "code", label: "SKU Code", required: true },
+    { key: "name", label: "Product Name", required: true },
+    { key: "category", label: "Category", required: false },
+  ];
+  const projFields = [
+    { key: "name", label: "Project Name", required: true },
+    { key: "date", label: "Date (YYYY-MM)", required: false },
+    { key: "skuCodes", label: "SKU Codes (comma-separated)", required: false },
+  ];
+  const fields = mode === "skus" ? skuFields : projFields;
+
+  const reset = () => { setStep("upload"); setFileName(""); setRawHeaders([]); setRawRows([]); setSheetNames([]); setSelectedSheet(""); setWorkbook(null); setMapping({}); setPreviewData([]); setImportResult(null); setErrors([]); };
+
+  const parseFile = (file) => {
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: "array" });
+        setWorkbook(wb);
+        setSheetNames(wb.SheetNames);
+        loadSheet(wb, wb.SheetNames[0]);
+      } catch (err) {
+        setErrors(["Failed to parse file. Please ensure it's a valid .xlsx or .csv file."]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const loadSheet = (wb, sheetName) => {
+    setSelectedSheet(sheetName);
+    const ws = wb.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    if (json.length < 2) { setErrors(["Sheet appears empty or has no data rows."]); return; }
+    const headers = json[0].map(h => String(h).trim());
+    const rows = json.slice(1).filter(r => r.some(c => String(c).trim() !== ""));
+    setRawHeaders(headers);
+    setRawRows(rows);
+    setErrors([]);
+    autoMap(headers);
+    setStep("map");
+  };
+
+  const autoMap = (headers) => {
+    const m = {};
+    const lowerHeaders = headers.map(h => h.toLowerCase());
+    fields.forEach(f => {
+      const patterns = {
+        code: ["sku", "sku code", "sku_code", "skucode", "code", "product code", "item code", "part number", "part no"],
+        name: ["name", "product name", "product_name", "description", "product", "item name", "item"],
+        category: ["category", "cat", "type", "material", "group", "class"],
+        date: ["date", "project date", "period", "month", "year"],
+        skuCodes: ["sku", "skus", "sku codes", "sku_codes", "tags", "products", "items"],
+      };
+      const pats = patterns[f.key] || [f.key];
+      const idx = lowerHeaders.findIndex(h => pats.some(p => h === p || h.includes(p)));
+      if (idx !== -1) m[f.key] = idx;
+    });
+    setMapping(m);
+  };
+
+  const buildPreview = () => {
+    const rows = rawRows.map((row, ri) => {
+      const obj = { _row: ri + 2 };
+      let valid = true;
+      fields.forEach(f => {
+        const colIdx = mapping[f.key];
+        const val = colIdx !== undefined && colIdx !== "" ? String(row[colIdx] || "").trim() : "";
+        obj[f.key] = val;
+        if (f.required && !val) valid = false;
+      });
+      obj._valid = valid;
+      return obj;
+    });
+    setPreviewData(rows);
+    setStep("preview");
+  };
+
+  const doImport = () => {
+    const validRows = previewData.filter(r => r._valid);
+    if (validRows.length === 0) return;
+
+    if (mode === "skus") {
+      const existingCodes = new Set(skus.map(s => s.code.toUpperCase()));
+      const newCats = new Set();
+      const newSkus = [];
+      let skipped = 0;
+      validRows.forEach(r => {
+        const code = r.code.toUpperCase();
+        if (existingCodes.has(code)) { skipped++; return; }
+        existingCodes.add(code);
+        const cat = r.category || "Uncategorized";
+        if (!categories.includes(cat) && cat !== "Uncategorized") newCats.add(cat);
+        newSkus.push({ id: `s${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, code, name: r.name, category: cat });
+      });
+      if (newCats.size > 0) onBulkAddCategories([...newCats]);
+      if (newSkus.length > 0) onBulkAddSkus(newSkus);
+      setImportResult({ added: newSkus.length, skipped, newCats: newCats.size, type: "SKUs" });
+    } else {
+      const newProjects = [];
+      validRows.forEach(r => {
+        const skuCodeList = r.skuCodes ? r.skuCodes.split(/[,;|]/).map(c => c.trim().toUpperCase()).filter(Boolean) : [];
+        const matchedIds = skuCodeList.map(c => { const found = skus.find(s => s.code.toUpperCase() === c); return found ? found.id : null; }).filter(Boolean);
+        newProjects.push({ id: `p${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: r.name, date: r.date || new Date().toISOString().slice(0, 7), skuIds: matchedIds, images: [] });
+      });
+      if (newProjects.length > 0) onBulkAddProjects(newProjects);
+      setImportResult({ added: newProjects.length, skipped: 0, type: "Projects" });
+    }
+    setStep("done");
+  };
+
+  const downloadTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    if (mode === "skus") {
+      const data = [["SKU Code", "Product Name", "Category"], ["WD-OAK-2400", "White Oak 2400mm Panel", "Wood"], ["ST-BLK-1200", "Black Steel Frame 1200mm", "Metal"], ["MRB-CAR-600", "Carrara Marble Tile 600x600", "Stone"]];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws["!cols"] = [{ wch: 18 }, { wch: 35 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(wb, ws, "SKUs");
+    } else {
+      const data = [["Project Name", "Date", "SKU Codes"], ["Marina Bay Residence", "2025-08", "WD-OAK-2400, MRB-CAR-600, CER-WHT-300"], ["Orchard Tower Lobby", "2025-06", "ST-BLK-1200, GL-FRS-800"]];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws["!cols"] = [{ wch: 28 }, { wch: 12 }, { wch: 45 }];
+      XLSX.utils.book_append_sheet(wb, ws, "Projects");
+    }
+    XLSX.writeFile(wb, `skuvault_${mode}_template.xlsx`);
+  };
+
+  const handleDrop = (e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer?.files?.[0]; if (file) parseFile(file); };
+  const handleFileInput = (e) => { const file = e.target.files?.[0]; if (file) parseFile(file); };
+
+  const validCount = previewData.filter(r => r._valid).length;
+  const invalidCount = previewData.filter(r => !r._valid).length;
+
+  return (
+    <div>
+      {/* Mode Toggle */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "var(--textMuted)", textTransform: "uppercase" }}>Import type:</span>
+        {[{ id: "skus", label: "SKUs", icon: "hash" }, { id: "projects", label: "Projects", icon: "layers" }].map(m => (
+          <button key={m.id} onClick={() => { if (m.id !== mode) { setMode(m.id); reset(); } }} style={{ ...btnBase, padding: "7px 16px", fontSize: 13, borderRadius: 8, background: mode === m.id ? "var(--accent)" : "var(--muted)", color: mode === m.id ? "#fff" : "var(--text)" }}>
+            <I n={m.icon} size={14} /> {m.label}
+          </button>
+        ))}
+        <button onClick={downloadTemplate} style={{ ...btnBase, padding: "7px 16px", fontSize: 12, borderRadius: 8, background: "transparent", color: "var(--accent)", border: "1px solid var(--accent)", marginLeft: "auto" }}>
+          <I n="download" size={14} /> Download Template
+        </button>
+      </div>
+
+      {/* ─── Step: Upload ─── */}
+      {step === "upload" && (
+        <div>
+          <div onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} onClick={() => fileRef.current?.click()}
+            style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`, borderRadius: 16, padding: "60px 32px", textAlign: "center", cursor: "pointer", background: dragOver ? "var(--accentSoft)" : "var(--card)", transition: "all 0.2s" }}>
+            <div style={{ color: dragOver ? "var(--accent)" : "var(--textMuted)", marginBottom: 12 }}><I n="upload" size={40} /></div>
+            <div style={{ fontFamily: sans, fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Drop your Excel file here</div>
+            <div style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", marginBottom: 16 }}>or click to browse — supports .xlsx, .xls, and .csv</div>
+            <div style={{ display: "inline-flex", ...btnBase, padding: "10px 24px", fontSize: 14, background: "var(--accent)", color: "#fff", borderRadius: 10 }}><I n="file" size={16} /> Choose File</div>
+            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileInput} style={{ display: "none" }} />
+          </div>
+          {errors.length > 0 && errors.map((e, i) => (
+            <div key={i} style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca", fontFamily: sans, fontSize: 13, color: "#dc2626", display: "flex", alignItems: "center", gap: 8 }}><I n="alert" size={16} /> {e}</div>
+          ))}
+          {/* Format guide */}
+          <div style={{ marginTop: 24, padding: 20, borderRadius: 12, background: "var(--muted)", border: "1px solid var(--border)" }}>
+            <h4 style={{ fontFamily: sans, fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 6 }}><I n="alert" size={15} /> Expected Format</h4>
+            {mode === "skus" ? (
+              <div>
+                <p style={{ fontFamily: sans, fontSize: 12, color: "var(--textMuted)", margin: "0 0 10px", lineHeight: 1.5 }}>Your spreadsheet should have columns for <strong>SKU Code</strong>, <strong>Product Name</strong>, and optionally <strong>Category</strong>. The first row should be headers.</p>
+                <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 11 }}>
+                    <thead><tr style={{ background: "var(--card)" }}>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>SKU Code</th>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>Product Name</th>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>Category</th>
+                    </tr></thead>
+                    <tbody>
+                      <tr><td style={{ padding: "5px 10px", color: "var(--text)" }}>WD-OAK-2400</td><td style={{ padding: "5px 10px", color: "var(--text)" }}>White Oak 2400mm Panel</td><td style={{ padding: "5px 10px", color: "var(--textMuted)" }}>Wood</td></tr>
+                      <tr style={{ background: "var(--card)" }}><td style={{ padding: "5px 10px", color: "var(--text)" }}>ST-BLK-1200</td><td style={{ padding: "5px 10px", color: "var(--text)" }}>Black Steel Frame 1200mm</td><td style={{ padding: "5px 10px", color: "var(--textMuted)" }}>Metal</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontFamily: sans, fontSize: 12, color: "var(--textMuted)", margin: "0 0 10px", lineHeight: 1.5 }}>Your spreadsheet should have <strong>Project Name</strong>, optionally <strong>Date</strong> (YYYY-MM), and <strong>SKU Codes</strong> (comma-separated). SKU codes must match existing SKUs.</p>
+                <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 11 }}>
+                    <thead><tr style={{ background: "var(--card)" }}>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>Project Name</th>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>Date</th>
+                      <th style={{ padding: "6px 10px", textAlign: "left", borderBottom: "1px solid var(--border)", color: "var(--accent)", fontWeight: 700 }}>SKU Codes</th>
+                    </tr></thead>
+                    <tbody>
+                      <tr><td style={{ padding: "5px 10px", color: "var(--text)" }}>Marina Bay Residence</td><td style={{ padding: "5px 10px", color: "var(--textMuted)" }}>2025-08</td><td style={{ padding: "5px 10px", color: "var(--textMuted)" }}>WD-OAK-2400, CER-WHT-300</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Step: Column Mapping ─── */}
+      {step === "map" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div style={{ fontFamily: sans, fontSize: 15, fontWeight: 700, color: "var(--text)" }}>{fileName}</div>
+              <div style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", marginTop: 2 }}>{rawRows.length} data row{rawRows.length !== 1 ? "s" : ""} · {rawHeaders.length} column{rawHeaders.length !== 1 ? "s" : ""}</div>
+            </div>
+            <button onClick={reset} style={{ ...btnBase, padding: "7px 14px", fontSize: 12, background: "var(--muted)", color: "var(--text)" }}><I n="x" size={14} /> Change File</button>
+          </div>
+
+          {sheetNames.length > 1 && (
+            <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "var(--textMuted)" }}>SHEET:</span>
+              {sheetNames.map(sn => (
+                <button key={sn} onClick={() => loadSheet(workbook, sn)} style={pill(selectedSheet === sn)}>{sn}</button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ padding: 20, background: "var(--card)", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 16 }}>
+            <h4 style={{ fontFamily: sans, fontSize: 14, fontWeight: 700, color: "var(--text)", margin: "0 0 14px", display: "flex", alignItems: "center", gap: 6 }}><I n="swap" size={15} /> Map Your Columns</h4>
+            <p style={{ fontFamily: sans, fontSize: 12, color: "var(--textMuted)", margin: "0 0 16px", lineHeight: 1.4 }}>Match each field to the correct column in your file. We've auto-detected where possible.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {fields.map(f => (
+                <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ width: 180, fontFamily: sans, fontSize: 13, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 4 }}>
+                    {f.label}{f.required && <span style={{ color: "var(--accent)", fontSize: 11 }}>*</span>}
+                  </div>
+                  <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+                    <select value={mapping[f.key] ?? ""} onChange={e => setMapping(m => ({ ...m, [f.key]: e.target.value === "" ? undefined : Number(e.target.value) }))}
+                      style={{ ...inputBase, fontSize: 12, cursor: "pointer", paddingRight: 28, color: mapping[f.key] !== undefined ? "var(--text)" : "var(--textMuted)" }}>
+                      <option value="">— Skip / Not mapped —</option>
+                      {rawHeaders.map((h, i) => <option key={i} value={i}>{h || `Column ${i + 1}`}</option>)}
+                    </select>
+                    {mapping[f.key] !== undefined && (
+                      <span style={{ position: "absolute", right: 30, top: "50%", transform: "translateY(-50%)", color: "#10b981" }}><I n="check" size={14} /></span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sample preview */}
+          <div style={{ padding: 16, background: "var(--muted)", borderRadius: 10, marginBottom: 16 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--textMuted)", textTransform: "uppercase", marginBottom: 8 }}>Sample (first 3 rows)</div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 11 }}>
+                <thead><tr>{fields.map(f => <th key={f.key} style={{ padding: "5px 8px", textAlign: "left", color: mapping[f.key] !== undefined ? "var(--accent)" : "var(--textMuted)", fontWeight: 700, borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>{f.label}</th>)}</tr></thead>
+                <tbody>
+                  {rawRows.slice(0, 3).map((row, ri) => (
+                    <tr key={ri}>{fields.map(f => {
+                      const val = mapping[f.key] !== undefined ? String(row[mapping[f.key]] || "") : "";
+                      return <td key={f.key} style={{ padding: "5px 8px", color: val ? "var(--text)" : "#ccc", borderBottom: "1px solid var(--border)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</td>;
+                    })}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={buildPreview} disabled={!fields.filter(f => f.required).every(f => mapping[f.key] !== undefined)}
+              style={{ ...btnBase, padding: "10px 24px", fontSize: 14, background: fields.filter(f => f.required).every(f => mapping[f.key] !== undefined) ? "var(--accent)" : "var(--muted)", color: fields.filter(f => f.required).every(f => mapping[f.key] !== undefined) ? "#fff" : "var(--textMuted)" }}>
+              Preview Import <I n="chevR" size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Step: Preview & Confirm ─── */}
+      {step === "preview" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div style={{ fontFamily: sans, fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Review Import</div>
+              <div style={{ fontFamily: mono, fontSize: 11, color: "var(--textMuted)", marginTop: 2 }}>{fileName} · {previewData.length} row{previewData.length !== 1 ? "s" : ""}</div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setStep("map")} style={{ ...btnBase, padding: "7px 14px", fontSize: 12, background: "var(--muted)", color: "var(--text)" }}><I n="back" size={14} /> Back</button>
+              <button onClick={reset} style={{ ...btnBase, padding: "7px 14px", fontSize: 12, background: "var(--muted)", color: "var(--text)" }}><I n="x" size={14} /> Cancel</button>
+            </div>
+          </div>
+
+          {/* Stats bar */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+            <div style={{ padding: "10px 16px", borderRadius: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", flex: 1, minWidth: 140 }}>
+              <div style={{ fontFamily: mono, fontSize: 22, fontWeight: 700, color: "#16a34a" }}>{validCount}</div>
+              <div style={{ fontFamily: sans, fontSize: 12, color: "#15803d" }}>Ready to import</div>
+            </div>
+            {invalidCount > 0 && (
+              <div style={{ padding: "10px 16px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", flex: 1, minWidth: 140 }}>
+                <div style={{ fontFamily: mono, fontSize: 22, fontWeight: 700, color: "#dc2626" }}>{invalidCount}</div>
+                <div style={{ fontFamily: sans, fontSize: 12, color: "#b91c1c" }}>Missing required fields</div>
+              </div>
+            )}
+            {mode === "skus" && (
+              <div style={{ padding: "10px 16px", borderRadius: 10, background: "var(--accentSoft)", border: "1px solid var(--accent)33", flex: 1, minWidth: 140 }}>
+                <div style={{ fontFamily: mono, fontSize: 22, fontWeight: 700, color: "var(--accent)" }}>{new Set(previewData.filter(r => r._valid).map(r => r.category).filter(c => c && !categories.includes(c))).size}</div>
+                <div style={{ fontFamily: sans, fontSize: 12, color: "var(--accent)" }}>New categories</div>
+              </div>
+            )}
+          </div>
+
+          {/* Preview table */}
+          <div style={{ borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ maxHeight: 400, overflowY: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 11 }}>
+                <thead><tr style={{ background: "var(--muted)", position: "sticky", top: 0 }}>
+                  <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "var(--textMuted)", borderBottom: "1px solid var(--border)", width: 36 }}>Row</th>
+                  <th style={{ padding: "8px 10px", textAlign: "center", fontWeight: 700, color: "var(--textMuted)", borderBottom: "1px solid var(--border)", width: 36 }}></th>
+                  {fields.map(f => <th key={f.key} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "var(--accent)", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>{f.label}</th>)}
+                </tr></thead>
+                <tbody>
+                  {previewData.slice(0, 100).map((r, i) => (
+                    <tr key={i} style={{ background: r._valid ? "var(--card)" : "#fef2f2" }}>
+                      <td style={{ padding: "5px 10px", color: "var(--textMuted)", borderBottom: "1px solid var(--border)" }}>{r._row}</td>
+                      <td style={{ padding: "5px 10px", textAlign: "center", borderBottom: "1px solid var(--border)" }}>
+                        {r._valid ? <span style={{ color: "#16a34a" }}><I n="check" size={13} /></span> : <span style={{ color: "#dc2626" }}><I n="alert" size={13} /></span>}
+                      </td>
+                      {fields.map(f => (
+                        <td key={f.key} style={{ padding: "5px 10px", color: r[f.key] ? "var(--text)" : "#ef4444", borderBottom: "1px solid var(--border)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {r[f.key] || (f.required ? "MISSING" : "—")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {previewData.length > 100 && <div style={{ padding: "8px 10px", fontFamily: sans, fontSize: 11, color: "var(--textMuted)", background: "var(--muted)", textAlign: "center" }}>Showing first 100 of {previewData.length} rows</div>}
+          </div>
+
+          <button onClick={doImport} disabled={validCount === 0}
+            style={{ ...btnBase, padding: "12px 32px", fontSize: 14, background: validCount > 0 ? "#16a34a" : "var(--muted)", color: validCount > 0 ? "#fff" : "var(--textMuted)", borderRadius: 10, boxShadow: validCount > 0 ? "0 4px 12px rgba(22,163,74,0.3)" : "none" }}>
+            <I n="check" size={16} /> Import {validCount} {mode === "skus" ? "SKU" : "Project"}{validCount !== 1 ? "s" : ""}
+          </button>
+        </div>
+      )}
+
+      {/* ─── Step: Done ─── */}
+      {step === "done" && importResult && (
+        <div style={{ textAlign: "center", padding: "48px 20px" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f0fdf4", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16, color: "#16a34a" }}><I n="check" size={32} /></div>
+          <h3 style={{ fontFamily: sans, fontSize: 20, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>Import Complete</h3>
+          <p style={{ fontFamily: sans, fontSize: 14, color: "var(--textMuted)", margin: "0 0 4px" }}>
+            <strong style={{ color: "#16a34a" }}>{importResult.added}</strong> {importResult.type.toLowerCase()} imported successfully.
+          </p>
+          {importResult.skipped > 0 && <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: "0 0 4px" }}>{importResult.skipped} duplicate SKU code{importResult.skipped !== 1 ? "s" : ""} skipped.</p>}
+          {importResult.newCats > 0 && <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: 0 }}>{importResult.newCats} new categor{importResult.newCats !== 1 ? "ies" : "y"} created.</p>}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 24 }}>
+            <button onClick={reset} style={{ ...btnBase, padding: "10px 24px", fontSize: 14, background: "var(--accent)", color: "#fff", borderRadius: 10 }}><I n="upload" size={16} /> Import More</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Admin Login Modal ─── */
+const LoginModal = ({ onLogin, onClose, logo }) => {
+  const [view, setView] = useState("login"); // "login" | "forgot" | "sent"
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+
+  const handleLogin = () => {
+    setError("");
+    if (!user.trim() || !pass.trim()) { setError("Please enter both username and password."); return; }
+    const result = onLogin(user.trim(), pass);
+    if (!result) setError("Invalid username or password.");
+  };
+
+  const handleForgot = () => {
+    if (!email.trim() || !email.includes("@")) { setError("Please enter a valid email address."); return; }
+    setError("");
+    setView("sent");
+  };
+
+  const iStyle = { ...inputBase, fontSize: 14, padding: "11px 14px" };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: 36, width: "100%", maxWidth: 400, border: "1px solid var(--border)", boxShadow: "0 24px 48px rgba(0,0,0,0.15)" }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <img src={logo} alt="Logo" style={{ height: 32, width: "auto", marginBottom: 12 }} />
+          <h2 style={{ fontFamily: sans, fontSize: 18, fontWeight: 700, color: "var(--text)", margin: 0 }}>
+            {view === "login" ? "Admin Login" : view === "forgot" ? "Reset Password" : "Email Sent"}
+          </h2>
+          <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: "6px 0 0" }}>
+            {view === "login" && "Enter your credentials to access the admin panel."}
+            {view === "forgot" && "Enter your admin email to receive a reset link."}
+            {view === "sent" && "Check your inbox for the password reset link."}
+          </p>
+        </div>
+
+        {view === "login" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.08em" }}>Username</label>
+              <input value={user} onChange={e => { setUser(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleLogin()} placeholder="admin" autoFocus style={iStyle} />
+            </div>
+            <div>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.08em" }}>Password</label>
+              <div style={{ position: "relative" }}>
+                <input value={pass} onChange={e => { setPass(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleLogin()} type={showPass ? "text" : "password"} placeholder="••••••••" style={{ ...iStyle, paddingRight: 40 }} />
+                <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--textMuted)", cursor: "pointer", padding: 2 }}><I n={showPass ? "eye" : "eye"} size={16} /></button>
+              </div>
+            </div>
+            {error && <div style={{ fontFamily: sans, fontSize: 12, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "8px 12px", borderRadius: 8 }}>{error}</div>}
+            <button onClick={handleLogin} style={{ ...btnBase, width: "100%", padding: "12px 0", fontSize: 14, background: "var(--accent)", color: "#fff", borderRadius: 10, marginTop: 4 }}>
+              <I n="shield" size={16} /> Sign In
+            </button>
+            <button onClick={() => { setView("forgot"); setError(""); }} style={{ background: "none", border: "none", fontFamily: sans, fontSize: 12, color: "var(--textMuted)", cursor: "pointer", textDecoration: "underline", padding: 4, textAlign: "center" }}>
+              Forgot your password?
+            </button>
+          </div>
+        )}
+
+        {view === "forgot" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.08em" }}>Admin Email</label>
+              <input value={email} onChange={e => { setEmail(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && handleForgot()} type="email" placeholder="admin@company.com" autoFocus style={iStyle} />
+            </div>
+            {error && <div style={{ fontFamily: sans, fontSize: 12, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "8px 12px", borderRadius: 8 }}>{error}</div>}
+            <button onClick={handleForgot} style={{ ...btnBase, width: "100%", padding: "12px 0", fontSize: 14, background: "var(--accent)", color: "#fff", borderRadius: 10, marginTop: 4 }}>
+              <I n="mail" size={16} /> Send Reset Link
+            </button>
+            <button onClick={() => { setView("login"); setError(""); }} style={{ background: "none", border: "none", fontFamily: sans, fontSize: 12, color: "var(--textMuted)", cursor: "pointer", textDecoration: "underline", padding: 4, textAlign: "center" }}>
+              Back to login
+            </button>
+          </div>
+        )}
+
+        {view === "sent" && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#f0fdf4", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16, color: "#16a34a" }}><I n="mail" size={26} /></div>
+            <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", lineHeight: 1.5, margin: "0 0 20px" }}>
+              If <strong>{email}</strong> matches an admin account, you'll receive a password reset link shortly.
+            </p>
+            <button onClick={() => { setView("login"); setEmail(""); setError(""); }} style={{ ...btnBase, padding: "10px 24px", fontSize: 13, background: "var(--accent)", color: "#fff", borderRadius: 8, margin: "0 auto" }}>
+              Return to Login
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Admin: Settings Tab ─── */
+const AdminSettings = ({ logo, onLogoChange, adminCreds, onCredsChange, onLogout }) => {
+  const fileRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  /* Password change state */
+  const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
+  const [pwMsg, setPwMsg] = useState({ type: "", text: "" });
+  const [emailForm, setEmailForm] = useState(adminCreds.email);
+  const [emailMsg, setEmailMsg] = useState("");
+
+  const processFile = (file) => {
+    if (!file) return;
+    const validTypes = ["image/png", "image/jpeg", "image/svg+xml", "image/webp", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a PNG, JPG, SVG, WebP, or GIF file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File size should be under 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => setPreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const applyLogo = () => { if (preview) { onLogoChange(preview); setPreview(null); } };
+  const resetLogo = () => { onLogoChange(LOGO_B64); setPreview(null); };
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      <h3 style={{ fontFamily: sans, fontSize: 17, fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>Branding</h3>
+      <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: "0 0 20px", lineHeight: 1.5 }}>Upload a logo to replace the current one in the navigation header. Recommended: PNG or SVG with a transparent background, at least 200px wide.</p>
+
+      {/* Current Logo */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Current Logo</label>
+        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "16px 24px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--muted)", minHeight: 50 }}>
+          <img src={logo} alt="Current logo" style={{ height: 36, width: "auto", maxWidth: 240 }} />
+        </div>
+      </div>
+
+      {/* Upload Area */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Upload New Logo</label>
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => { e.preventDefault(); setDragOver(false); processFile(e.dataTransfer?.files?.[0]); }}
+          onClick={() => fileRef.current?.click()}
+          style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`, borderRadius: 12, padding: "32px 24px", textAlign: "center", cursor: "pointer", background: dragOver ? "var(--accentSoft)" : "var(--card)", transition: "all 0.2s" }}
+        >
+          {preview ? (
+            <div>
+              <div style={{ marginBottom: 12, padding: "12px 20px", display: "inline-flex", background: "var(--muted)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <img src={preview} alt="Preview" style={{ height: 40, width: "auto", maxWidth: 260 }} />
+              </div>
+              <div style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Logo ready to apply</div>
+              <div style={{ fontFamily: sans, fontSize: 11, color: "var(--textMuted)", marginTop: 2 }}>Click "Apply" below, or drop another file to replace</div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ color: "var(--textMuted)", marginBottom: 8 }}><I n="upload" size={28} /></div>
+              <div style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 4 }}>Drop an image here</div>
+              <div style={{ fontFamily: sans, fontSize: 12, color: "var(--textMuted)" }}>or click to browse — PNG, JPG, SVG, WebP (max 2MB)</div>
+            </div>
+          )}
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" onChange={e => processFile(e.target.files?.[0])} style={{ display: "none" }} />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 40 }}>
+        {preview && (
+          <button onClick={applyLogo} style={{ ...btnBase, padding: "10px 24px", fontSize: 13, background: "var(--accent)", color: "#fff", borderRadius: 8 }}>
+            <I n="check" size={15} /> Apply Logo
+          </button>
+        )}
+        {preview && (
+          <button onClick={() => setPreview(null)} style={{ ...btnBase, padding: "10px 18px", fontSize: 13, background: "var(--muted)", color: "var(--text)", borderRadius: 8, border: "1px solid var(--border)" }}>
+            Cancel
+          </button>
+        )}
+        <button onClick={resetLogo} style={{ ...btnBase, padding: "10px 18px", fontSize: 13, background: "transparent", color: "var(--textMuted)", borderRadius: 8, border: "1px solid var(--border)", marginLeft: preview ? 0 : "auto" }}
+          title="Restore the original LTK logo">
+          <I n="back" size={14} /> Reset to Default
+        </button>
+      </div>
+
+      {/* ─── Account Security ─── */}
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: 28 }}>
+        <h3 style={{ fontFamily: sans, fontSize: 17, fontWeight: 700, color: "var(--text)", margin: "0 0 6px", display: "flex", alignItems: "center", gap: 8 }}><I n="key" size={18} /> Account Security</h3>
+        <p style={{ fontFamily: sans, fontSize: 13, color: "var(--textMuted)", margin: "0 0 20px", lineHeight: 1.5 }}>Manage your admin login credentials. Currently signed in as <strong>{adminCreds.username}</strong>.</p>
+
+        {/* Change Email */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.08em" }}>Recovery Email</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={emailForm} onChange={e => { setEmailForm(e.target.value); setEmailMsg(""); }} style={{ ...inputBase, flex: 1, fontSize: 13 }} placeholder="admin@company.com" />
+            <button onClick={() => {
+              if (!emailForm.trim() || !emailForm.includes("@")) { setEmailMsg("Enter a valid email."); return; }
+              onCredsChange({ ...adminCreds, email: emailForm.trim() });
+              setEmailMsg("Email updated.");
+            }} style={{ ...btnBase, padding: "9px 16px", fontSize: 12, background: "var(--muted)", color: "var(--text)", border: "1px solid var(--border)" }}>Save</button>
+          </div>
+          {emailMsg && <div style={{ fontFamily: sans, fontSize: 11, color: emailMsg.includes("valid") ? "#dc2626" : "#16a34a", marginTop: 6 }}>{emailMsg}</div>}
+        </div>
+
+        {/* Change Password */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--textMuted)", display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.08em" }}>Change Password</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input value={pwForm.current} onChange={e => { setPwForm(f => ({ ...f, current: e.target.value })); setPwMsg({ type: "", text: "" }); }} type="password" placeholder="Current password" style={{ ...inputBase, fontSize: 13 }} />
+            <input value={pwForm.newPw} onChange={e => { setPwForm(f => ({ ...f, newPw: e.target.value })); setPwMsg({ type: "", text: "" }); }} type="password" placeholder="New password (min. 6 characters)" style={{ ...inputBase, fontSize: 13 }} />
+            <input value={pwForm.confirm} onChange={e => { setPwForm(f => ({ ...f, confirm: e.target.value })); setPwMsg({ type: "", text: "" }); }} type="password" placeholder="Confirm new password" onKeyDown={e => e.key === "Enter" && document.getElementById("pw-save-btn")?.click()} style={{ ...inputBase, fontSize: 13 }} />
+          </div>
+          <button id="pw-save-btn" onClick={() => {
+            if (!pwForm.current) { setPwMsg({ type: "err", text: "Enter your current password." }); return; }
+            if (pwForm.current !== adminCreds.password) { setPwMsg({ type: "err", text: "Current password is incorrect." }); return; }
+            if (pwForm.newPw.length < 6) { setPwMsg({ type: "err", text: "New password must be at least 6 characters." }); return; }
+            if (pwForm.newPw !== pwForm.confirm) { setPwMsg({ type: "err", text: "New passwords do not match." }); return; }
+            onCredsChange({ ...adminCreds, password: pwForm.newPw });
+            setPwForm({ current: "", newPw: "", confirm: "" });
+            setPwMsg({ type: "ok", text: "Password updated successfully." });
+          }} style={{ ...btnBase, padding: "9px 16px", fontSize: 12, background: "var(--accent)", color: "#fff", marginTop: 10 }}>
+            <I n="check" size={14} /> Update Password
+          </button>
+          {pwMsg.text && <div style={{ fontFamily: sans, fontSize: 11, color: pwMsg.type === "err" ? "#dc2626" : "#16a34a", marginTop: 8 }}>{pwMsg.text}</div>}
+        </div>
+
+        {/* Logout */}
+        <div style={{ paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+          <button onClick={onLogout} style={{ ...btnBase, padding: "10px 20px", fontSize: 13, background: "transparent", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8 }}>
+            <I n="logOut" size={15} /> Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Admin Page Shell ─── */
+const AdminPage = (props) => {
+  const [tab, setTab] = useState("skus");
+  const tabs = [
+    { id: "skus", label: "SKU List", icon: "hash", desc: `${props.skus.length} items` },
+    { id: "projects", label: "Projects", icon: "layers", desc: `${props.projects.length} folders` },
+    { id: "categories", label: "Categories", icon: "tag", desc: `${props.categories.length} types` },
+    { id: "import", label: "Import", icon: "upload", desc: "Excel" },
+    { id: "settings", label: "Settings", icon: "settings", desc: "" },
+  ];
+  return (
+    <div>
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ ...btnBase, padding: "10px 20px", fontSize: 13, borderRadius: 10, background: tab === t.id ? "var(--card)" : "transparent", color: tab === t.id ? "var(--accent)" : "var(--textMuted)", border: tab === t.id ? "1px solid var(--border)" : "1px solid transparent", boxShadow: tab === t.id ? "0 2px 8px rgba(0,0,0,0.06)" : "none" }}>
+            <I n={t.icon} size={15} /> {t.label} {t.desc && <span style={{ fontFamily: mono, fontSize: 10, opacity: 0.7, marginLeft: 2 }}>{t.desc}</span>}
+          </button>
+        ))}
+      </div>
+      {tab === "skus" && <AdminSKUs skus={props.skus} categories={props.categories} onAdd={props.onAddSku} onUpdate={props.onUpdateSku} onDelete={props.onDeleteSku} projects={props.projects} />}
+      {tab === "projects" && <AdminProjects projects={props.projects} skus={props.skus} onAdd={props.onAddProject} onUpdate={props.onUpdateProject} onDelete={props.onDeleteProject} onDeleteImage={props.onDeleteImage} />}
+      {tab === "categories" && <AdminCategories categories={props.categories} onAdd={props.onAddCat} onRename={props.onRenameCat} onDelete={props.onDeleteCat} skuCounts={props.catCounts} />}
+      {tab === "import" && <ExcelImporter skus={props.skus} categories={props.categories} onBulkAddSkus={props.onBulkAddSkus} onBulkAddProjects={props.onBulkAddProjects} onBulkAddCategories={props.onBulkAddCategories} />}
+      {tab === "settings" && <AdminSettings logo={props.logo} onLogoChange={props.onLogoChange} adminCreds={props.adminCreds} onCredsChange={props.onCredsChange} onLogout={props.onLogout} />}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════════════════ */
+function App() {
+  const [page, setPage] = useState("public");
+  const [skus, setSkus] = useState(INIT_SKUS);
+  const [projects, setProjects] = useState(INIT_PROJECTS);
+  const [categories, setCategories] = useState(INIT_CATEGORIES);
+  const [logo, setLogo] = useState(LOGO_B64);
+
+  /* Auth state */
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [adminCreds, setAdminCreds] = useState({ username: "admin", password: "admin123", email: "admin@lamitak.com" });
+
+  const handleLogin = (username, password) => {
+    if (username === adminCreds.username && password === adminCreds.password) {
+      setIsAdmin(true);
+      setShowLogin(false);
+      setPage("admin");
+      return true;
+    }
+    return false;
+  };
+  const handleLogout = () => { setIsAdmin(false); setPage("public"); };
+  const handleAdminClick = () => { if (isAdmin) setPage("admin"); else setShowLogin(true); };
+
+  const addSku = (s) => setSkus(prev => [s, ...prev]);
+  const updateSku = (s) => setSkus(prev => prev.map(x => x.id === s.id ? s : x));
+  const deleteSku = (id) => { setSkus(prev => prev.filter(x => x.id !== id)); setProjects(prev => prev.map(p => ({ ...p, skuIds: p.skuIds.filter(sid => sid !== id) }))); };
+
+  const addProject = (p) => setProjects(prev => [p, ...prev]);
+  const updateProject = (p) => setProjects(prev => prev.map(x => x.id === p.id ? p : x));
+  const deleteProject = (id) => setProjects(prev => prev.filter(x => x.id !== id));
+  const deleteImage = (projId, imgId) => setProjects(prev => prev.map(p => p.id === projId ? { ...p, images: p.images.filter(i => i.id !== imgId) } : p));
+
+  const addCat = (name) => setCategories(prev => [...prev, name]);
+  const bulkAddCats = (names) => setCategories(prev => { const s = new Set(prev); names.forEach(n => s.add(n)); return [...s]; });
+  const renameCat = (old, nw) => { setCategories(prev => prev.map(c => c === old ? nw : c)); setSkus(prev => prev.map(s => s.category === old ? { ...s, category: nw } : s)); };
+  const deleteCat = (name) => {
+    const affected = skus.filter(s => s.category === name).length;
+    setCategories(prev => prev.filter(c => c !== name));
+    if (affected > 0) {
+      setCategories(prev => prev.includes("Uncategorized") ? prev : [...prev, "Uncategorized"]);
+      setSkus(prev => prev.map(s => s.category === name ? { ...s, category: "Uncategorized" } : s));
+    }
+  };
+
+  const bulkAddSkus = (arr) => setSkus(prev => [...arr, ...prev]);
+  const bulkAddProjects = (arr) => setProjects(prev => [...arr, ...prev]);
+  const catCounts = useMemo(() => categories.reduce((a, c) => { a[c] = skus.filter(s => s.category === c).length; return a; }, {}), [categories, skus]);
+
+  return (
+    <div style={{
+      "--bg": "#ffffff", "--card": "#ffffff", "--border": "#dddede", "--text": "#000000",
+      "--textMuted": "#666666", "--accent": "#000000", "--muted": "#f5f5f5", "--accentSoft": "rgba(0,0,0,0.05)",
+      minHeight: "100vh", background: "var(--bg)",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+      {/* Login Modal */}
+      {showLogin && <LoginModal onLogin={handleLogin} onClose={() => setShowLogin(false)} logo={logo} />}
+
+      {/* ─── Nav ─── */}
+      <header style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "0 20px", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+          <div onClick={() => setPage("public")} style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+            <img src={logo} alt="Logo" style={{ height: 28, width: "auto" }} />
+            <div style={{ height: 24, width: 1, background: "var(--border)" }} />
+            <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 600, color: "var(--text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>Project Reference Gallery</span>
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <button onClick={() => setPage("public")} style={{ ...btnBase, padding: "7px 16px", fontSize: 13, background: page === "public" ? "var(--muted)" : "transparent", color: page === "public" ? "var(--text)" : "var(--textMuted)", border: page === "public" ? "1px solid var(--border)" : "1px solid transparent", borderRadius: 8 }}>
+              <I n="eye" size={15} /> Directory
+            </button>
+            <button onClick={handleAdminClick} style={{ ...btnBase, padding: "7px 16px", fontSize: 13, background: page === "admin" ? "var(--text)" : "transparent", color: page === "admin" ? "#ffffff" : "var(--textMuted)", border: "1px solid transparent", borderRadius: 8 }}>
+              <I n="shield" size={15} /> Admin
+            </button>
+            {isAdmin && (
+              <button onClick={handleLogout} title="Sign out" style={{ ...btnBase, padding: "7px 10px", fontSize: 12, background: "transparent", color: "var(--textMuted)", border: "none", borderRadius: 8, marginLeft: 2 }}>
+                <I n="logOut" size={15} />
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px 80px" }}>
+        {page === "public" ? (
+          <PublicPage skus={skus} projects={projects} categories={categories} />
+        ) : isAdmin ? (
+          <AdminPage
+            skus={skus} projects={projects} categories={categories} catCounts={catCounts}
+            logo={logo} onLogoChange={setLogo}
+            adminCreds={adminCreds} onCredsChange={setAdminCreds} onLogout={handleLogout}
+            onAddSku={addSku} onUpdateSku={updateSku} onDeleteSku={deleteSku}
+            onAddProject={addProject} onUpdateProject={updateProject} onDeleteProject={deleteProject} onDeleteImage={deleteImage}
+            onAddCat={addCat} onRenameCat={renameCat} onDeleteCat={deleteCat}
+            onBulkAddSkus={bulkAddSkus} onBulkAddProjects={bulkAddProjects} onBulkAddCategories={bulkAddCats}
+          />
+        ) : (
+          <PublicPage skus={skus} projects={projects} categories={categories} />
+        )}
+      </main>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+  </script>
+</body>
+</html>
